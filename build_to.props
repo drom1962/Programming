@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <root>$(SolutionDir)</root>
+    <dir_for_build>$(root)\BUILD\$(Configuration)\</dir_for_build>
+    <dir_for_build_temp>$(dir_for_build)\..\obj\$(PlatformShortName)\$(ProjectName)\$(Configuration)\</dir_for_build_temp>
+    <dir_for_build_log>$(TEMP)\orion_video_build\$(PlatformShortName)\$(ProjectName)\$(Configuration)\</dir_for_build_log>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(dir_for_build)</OutDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IntDir>$(dir_for_build_temp)</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(OutputPath);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(OutputPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <BuildLog>
+      <Path>$(dir_for_build_log)\$(MSBuildProjectName).log</Path>
+    </BuildLog>
+    <Lib>
+      <AdditionalLibraryDirectories>$(OutputPath);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="root">
+      <Value>$(root)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="dir_for_build">
+      <Value>$(dir_for_build)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="dir_for_build_temp">
+      <Value>$(dir_for_build_temp)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="dir_for_build_log">
+      <Value>$(dir_for_build_log)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

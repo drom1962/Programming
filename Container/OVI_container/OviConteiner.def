@@ -1,0 +1,5 @@
+LIBRARY OVIConteiner.dll
+EXPORTS    
+	CheckExtension
+	CreateConteiner
+	Version
