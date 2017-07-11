@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "decoder.h"
+#include "..\Decoders\decoder.h"
 
 #include "common.h"
 

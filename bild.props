@@ -6,6 +6,7 @@
     <OutDir>D:\Programming\BUILD\$(PlatformToolSet)\$(Configuration)\</OutDir>
     <IntDir>D:\Programming\BUILD\$(PlatformToolSet)\objs\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>D:..\..\zlib-1.2.11;D:..\..\BUILD\$(PlatformToolSet)\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(GIT)\common;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup />
   <ItemGroup />
