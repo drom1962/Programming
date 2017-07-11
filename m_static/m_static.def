@@ -1,0 +1,18 @@
+LIBRARY m_static
+
+EXPORTS
+	GetBMIH
+	ReleaseBMIH
+	GetNumberOfMovingObjects
+	GetArrayOfMovingObjects
+	ReleaseArrayOfMovingObjects
+	GetArrayOfByte
+	ReleaseArrayOfByte
+	CreateDetector02
+	InitDetector02
+	UpdateDetector02InverseMetaResize
+	ReleaseDetector02
+	IsMovingDetector02
+	SetMinObjSizeDetector02
+	GetMinObjSizeDetector02
+	ResetStatisticsDetector02
