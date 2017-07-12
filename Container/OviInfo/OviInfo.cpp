@@ -49,7 +49,7 @@ int wmain(int argc, wchar_t* argv[])
 	ret = mtd1->Open(File1, &mFI);
 	if (ret != 0) 
 		{ 
-		getch();
+		_getch();
 		return 1; 
 		}
 	printf("\nMetaData\n-----------------\n");
@@ -65,17 +65,17 @@ int wmain(int argc, wchar_t* argv[])
 
 	printf("\n  Prinf frames - n/y   -");
 
-	int ss=getch();
+	int ss=_getch();
 	if (ss != 'y') return 0;
 
 	for (DWORD i = 0; i < oFI.CountVideoFrame; i++)
 		{
-		ret = kbhit();
+		ret = _kbhit();
 		if (ret != 0)
 			{
-			ss=getch();
+			ss=_getch();
 			if (ss == 's') return 0;
-			getch();
+			_getch();
 			}
 
 		ret = ovi1->ReadVideoFrame(i, nullptr, 0, &VFI);
