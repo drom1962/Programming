@@ -4,9 +4,9 @@
 
 #include <string>
 
-#include "..\Containers\ovi\ovi_container.h"
+#include "..\..\Containers\ovi\ovi_container.h"
 
-#include "..\Containers\ovi\metadata.h"
+#include "..\..\Containers\ovi\metadata.h"
 
 
 #include <stdio.h>

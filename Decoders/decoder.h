@@ -3,10 +3,7 @@
 
 #include <windows.h>
 
-
-#include "decoder.h"
-
-#include <OVDecoderTrait.h>
+#include "OVDecoderTrait.h"
 
 
 struct DecoderInfo

@@ -3,9 +3,12 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <OutDir>D:\Programming\BUILD\$(PlatformToolSet)\lib\$(Configuration)\</OutDir>
     <LibraryPath>D:..\..\zlib-1.2.11;D:\Programming\BUILD\$(PlatformToolSet)\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(GIT)\common\lib\$(Configuration);$(GIT)\ipp82\lib;$(GIT)\opencv\lib\$(Configuration);D:\Programming\BUILD\$(PlatformToolset)\lib\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

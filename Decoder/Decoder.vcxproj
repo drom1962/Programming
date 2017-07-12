@@ -59,6 +59,7 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\bild.props" />
+    <Import Project="..\bild_lib.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -75,8 +76,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>..\zlib-1.2.11;$(ipp82)\lib;$(opencv)\lib\$(Configuration);D:\GIT\common\lib\$(Configuration);D:\Programming\BUILD\$(PlatformToolSet)\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
-    <IncludePath>..\m_static_git\m_static;$(opencv)\include;$(ipp82)\include;$(boost63);..\decoders;D:\GIT\common;$(IncludePath)</IncludePath>
+    <LibraryPath>..\zlib-1.2.11;D:..\BUILD\$(PlatformToolSet)\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\m_static_git\m_static;..\decoders;$(IncludePath)</IncludePath>
     <IntDir>D:\Programming\BUILD\objs\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -105,6 +106,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>common_tools_15.lib;OVDecoderFactory_15.lib;ovicontainer_15.lib;zlib.lib;m_static.lib;opencv_core2411d.lib;opencv_flann2411d.lib;opencv_imgproc2411d.lib;opencv_video2411d.lib;opencv_highgui2411d.lib;ippccmt.lib;ippimt.lib;ippsmt.lib;ippcoremt.lib;ippcvmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Programming\BUILD\v140\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

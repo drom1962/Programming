@@ -1,13 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <GIT>D:\Git</GIT>
+  </PropertyGroup>
   <PropertyGroup>
     <OutDir>D:\Programming\BUILD\$(PlatformToolSet)\$(Configuration)\</OutDir>
     <IntDir>D:\Programming\BUILD\$(PlatformToolSet)\objs\$(ProjectName)\$(Configuration)\</IntDir>
-    <LibraryPath>D:..\..\zlib-1.2.11;D:..\..\BUILD\$(PlatformToolSet)\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(GIT)\common;$(IncludePath)</IncludePath>
   </PropertyGroup>
-  <ItemDefinitionGroup />
-  <ItemGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(GIT)\common;$(GIT)\opencv\include;$(GIT)\IPP82\include;$(GIT)\boost63</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(GIT)\lib;$(GIT)\ipp82\lib;$(GIT)\opencv\lib\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="GIT">
+      <Value>$(GIT)</Value>
+    </BuildMacro>
+  </ItemGroup>
 </Project>
