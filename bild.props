@@ -3,10 +3,11 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <GIT>D:\Git</GIT>
+    <MyRoot>E:\MyGit</MyRoot>
   </PropertyGroup>
   <PropertyGroup>
-    <OutDir>D:\Programming\BUILD\$(PlatformToolSet)\$(Configuration)\</OutDir>
-    <IntDir>D:\Programming\BUILD\$(PlatformToolSet)\objs\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(MyRoot)\BUILD\$(PlatformToolSet)\$(Configuration)\</OutDir>
+    <IntDir>$(MyRoot)\BUILD\$(PlatformToolSet)\objs\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -19,6 +20,9 @@
   <ItemGroup>
     <BuildMacro Include="GIT">
       <Value>$(GIT)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MyRoot">
+      <Value>$(MyRoot)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

@@ -19,7 +19,7 @@
 
 #include "Bradski_Devis.h"
 
-#include "decoder.h"
+#include "..\Decoders\decoder.h"
 
 #include "detector02.h"
 

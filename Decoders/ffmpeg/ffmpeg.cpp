@@ -1,6 +1,6 @@
-#include "D:..\..\Decoders\decoder.h"
+#include "..\..\Decoders\decoder.h"
 
-#include "D:..\..\Containers\common.h"
+#include "..\..\Containers\common.h"
 
 Decoder::~Decoder() {};
 
