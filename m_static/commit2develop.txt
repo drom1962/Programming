@@ -1,6 +1,0 @@
-Just to make new commit in develop branch
-and one more commit in develop branch
-and one more commit in develop branch
-one more commit after branch creation
-one more commit for timestamp calculation
-one more commit for min obj size calculation
