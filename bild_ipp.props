@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <GIT>D:\Git</GIT>
+    <MyRoot>D:\Programming</MyRoot>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(GIT)\common;$(GIT)\opencv\include;$(GIT)\IPP82\include;$(GIT)\boost63</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(GIT)\ipp82\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ippccmt.lib;ippimt.lib;ippsmt.lib;ippcoremt.lib;ippcvmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="GIT">
+      <Value>$(GIT)</Value>
+    </BuildMacro>
+    <BuildMacro Include="MyRoot">
+      <Value>$(MyRoot)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
