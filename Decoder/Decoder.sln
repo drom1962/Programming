@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test1", "Test1\Test1.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m_static", "m_static\m_static.vcxproj", "{FC897FE4-7875-4EB3-BAEB-B833A2F6CC7D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib_15", "..\Container\OVI_container\OVI_container.vcxproj", "{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,12 @@ Global
 		{FC897FE4-7875-4EB3-BAEB-B833A2F6CC7D}.Release|x64.Build.0 = Release|x64
 		{FC897FE4-7875-4EB3-BAEB-B833A2F6CC7D}.Release|x86.ActiveCfg = Release|Win32
 		{FC897FE4-7875-4EB3-BAEB-B833A2F6CC7D}.Release|x86.Build.0 = Release|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Debug|x64.ActiveCfg = Debug|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Debug|x86.ActiveCfg = Debug|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Debug|x86.Build.0 = Debug|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Release|x64.ActiveCfg = Release|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Release|x86.ActiveCfg = Release|Win32
+		{71ED8974-6BAF-4F89-AD36-FC07B0CA7FBA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

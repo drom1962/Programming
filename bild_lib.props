@@ -10,6 +10,9 @@
       <AdditionalLibraryDirectories>$(GIT)\common\lib\$(Configuration);$(GIT)\ipp82\lib;$(GIT)\opencv\lib\$(Configuration);$(MyRoot)\BUILD\$(PlatformToolset)\lib\$(Configuration);$(MyRoot)\zlib-1.2.11;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>common_tools_15.lib;OVDecoderFactory_15.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

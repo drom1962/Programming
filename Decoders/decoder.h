@@ -5,6 +5,13 @@
 
 #include "OVDecoderTrait.h"
 
+#include "cuda_runtime.h"
+#include "cuda_runtime_api.h"
+#include "device_launch_parameters.h"
+
+#include "nvcuvid.h"
+
+
 
 struct DecoderInfo
 	{
@@ -131,6 +138,9 @@ class Nvidia: public Decoder
 {
 private:
 	int			m_Feature;		// Свойства декодера
+
+	CUvideoparser   m_Parser;   // Парсер
+
 
 public:
 				Nvidia();
