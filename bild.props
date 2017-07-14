@@ -11,7 +11,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(GIT)\common;$(GIT)\opencv\include;$(GIT)\IPP82\include;$(GIT)\boost63</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GIT)\common;$(GIT)\opencv\include;$(GIT)\IPP82\include;$(GIT)\boost63;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(GIT)\lib;$(GIT)\ipp82\lib;$(GIT)\opencv\lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

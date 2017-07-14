@@ -59,7 +59,6 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>..\..\objs\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>OviContainer_15</TargetName>
-    <IncludePath>D:..\Decoders;D:..\Containers;$(IncludePath)</IncludePath>
     <OutDir>D:\Programming\BUILD\$(PlatformToolSet)\lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -74,6 +73,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_DECODER_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(MyRoot)\..\Decoders;$(myRoot)\..\Containers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

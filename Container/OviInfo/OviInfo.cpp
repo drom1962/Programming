@@ -84,5 +84,5 @@ int wmain(int argc, wchar_t* argv[])
 		printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
 		}
 
-
+	while(_kbhit()==0);
 }
