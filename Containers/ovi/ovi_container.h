@@ -322,6 +322,8 @@ public:
 
 	int						Recovery(LPCWSTR FileName);
 
+	int						GetVideoFrameInfo(DWORD IndexFrame, VideoFrameInfo *VFI);
+
 	void					Debug(void);
 
 private: 

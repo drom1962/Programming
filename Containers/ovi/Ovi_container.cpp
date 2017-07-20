@@ -199,6 +199,11 @@ int OVI2::Create(LPCWSTR FileName,FileInfo *FI)
 
 			if(CreateBuff(&m_AudioIndexs,sizeof(ElementAudioIndex),0,m_MaxAudioIndex))	return OVI_NotAlloc;
 			}
+		else
+			{
+			// нет звука
+			m_H_OVI.CountVideoFrame = 0;
+			}
 					
 		m_FreeIndex=0;								// Самый первый индех
 		m_VideoFramesIntoBuffers=m_VideoBuff;
@@ -883,10 +888,23 @@ int OVI2::ReadNextVideoFrame(unsigned char *BuffFrame,DWORD BuffSize,VideoFrameI
 //
 // Прочитаем информацию о кадре
 //
-int OVI2::GetInfoVideoFrame(DWORD IndexFrame,VideoFrameInfo *FI)
+int OVI2::GetInfoVideoFrame(DWORD IndexFrame,VideoFrameInfo *VFI)
 	{
 	if(m_hFile==nullptr) return OVI_NotOpen;
 	
+	if (IndexFrame<0 || IndexFrame>m_H_OVI.CountVideoFrame)  return -1;
+
+	if (VFI != nullptr)
+		{
+		// Вернем информацию о фрейме
+		VFI->Codec			= m_H_OVI.VideoCodec;
+		VFI->TypeFrame		= ((ElementVideoIndex2 *)m_VideoIndexs)[IndexFrame].TypeFrame;
+		VFI->SizeFrame		= ((ElementVideoIndex2 *)m_VideoIndexs)[IndexFrame].SizeFrame;
+		VFI->Data			= nullptr;
+		VFI->SizeUserData	= ((ElementVideoIndex2 *)m_VideoIndexs)[IndexFrame].SizeUserData;
+		VFI->TimeFrame		= ((ElementVideoIndex2 *)m_VideoIndexs)[IndexFrame].TimeFrame / 10;
+		}
+
 	return S_OK;
 	}
 

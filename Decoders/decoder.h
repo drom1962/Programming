@@ -74,15 +74,15 @@ struct	BMP
 //
 class Decoder
 {
-private:
-	int				m_Feature;		// Свойства декодера
+public:
+	int				DecoderFeature;	// Свойства декодера
 
 	unsigned char	*LocalBuff;		// Локальный буфер под декодированный кадр
 	int				SizeBuff;		// и его размер
 
-public:
+	DecoderInfo		DI;
 
-	//Decoder() {};
+public:
 
 	virtual				~Decoder() =0;
 
@@ -102,12 +102,7 @@ using namespace ov_decoder;
 class Ffmpeg: public Decoder
 {
 private:
-	int					m_Feature;		// Свойства декодера
-
 	BMP					m_BitMap;
-
-	char				*m_LocalBuff;		// Локальный буфер под декодированный кадр
-	int					m_SizeBuff;		// и его размер
 
 	//
 	video_decoder		*m_dec;
@@ -137,10 +132,7 @@ static void * MyAlloc(size_t cb, void *oldptr, void *arg);
 class Nvidia: public Decoder
 {
 private:
-	int			m_Feature;		// Свойства декодера
-
 	CUvideoparser   m_Parser;   // Парсер
-
 
 public:
 				Nvidia();

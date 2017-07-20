@@ -10,8 +10,9 @@ Decoder::~Decoder() {};
 Ffmpeg::Ffmpeg()
 	{
 	m_dec = nullptr;
-	m_LocalBuff = nullptr;
-	m_Feature = Decod;
+	LocalBuff = nullptr;
+	SizeBuff = 0;
+	DecoderFeature = Decod;
 	}
 
 Ffmpeg::~Ffmpeg()
@@ -21,7 +22,7 @@ Ffmpeg::~Ffmpeg()
 
 int Ffmpeg::Feature()
 	{
-	return m_Feature;
+	return DecoderFeature;
 	}
 
 //
@@ -34,13 +35,15 @@ int	Ffmpeg::Init(int Dev,DecoderInfo *DI)
 
 	m_dec = create_video_decoder(decoderImplID);
 
-	auto st = m_dec->init_instance(0);
+	status  st = m_dec->init_instance(0);
 
 	video_codec		videoCodec=(video_codec)DI->Codec;
 	st = m_dec->set_video_decoder_params(videoCodec,
 		DI->Width,
 		DI->Height,
 		img_format_rgb24);
+	
+	if (st != status_ok) return st;
 	
 	// Заполним битмап хедер
 	FillBitMap(&m_BitMap, DI->Height, DI->Width);
@@ -60,10 +63,10 @@ int	Ffmpeg::Decode(Frame *Frame, FrameInfo *FI)
 
 	output_frame	of;
 
-	auto st = m_dec->decode_frame(Frame->Data,Frame->Size, &of);
+	status st = m_dec->decode_frame(Frame->Data,Frame->Size, &of);
 
 	FI->Size = of.size;
-	FI->Data = (unsigned char *)m_LocalBuff;
+	FI->Data = (unsigned char *)LocalBuff;
 	
 	return S_OK;
 	}
@@ -84,7 +87,7 @@ void * Ffmpeg::MyAlloc(size_t cb, void *oldptr, void *arg)
 
 	char *m_LocalBuff = nullptr;
 
-	if (static_cast<Ffmpeg *>(arg)->m_LocalBuff == NULL)
+	if (static_cast<Ffmpeg *>(arg)->LocalBuff == NULL)
 		{
 		cb += sizeof(BMP);
 
@@ -94,7 +97,7 @@ void * Ffmpeg::MyAlloc(size_t cb, void *oldptr, void *arg)
 
 		memcpy(m_LocalBuff,&static_cast<Ffmpeg *>(arg)->m_BitMap, sizeof(BMP));
 
-		static_cast<Ffmpeg *>(arg)->m_LocalBuff = m_LocalBuff;
+		static_cast<Ffmpeg *>(arg)->LocalBuff = (unsigned char *)m_LocalBuff;
 
 		m_LocalBuff += sizeof(BMP);
 		

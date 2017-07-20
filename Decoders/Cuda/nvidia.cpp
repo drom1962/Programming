@@ -7,7 +7,9 @@ Decoder::~Decoder() {};
 //
 Nvidia::Nvidia()
 	{
-	m_Feature = DecodResize || CopyDevToHost || Surface;
+	DecoderFeature = DecodResize || CopyDevToHost || Surface;
+	SizeBuff = 0;
+	LocalBuff = nullptr;
 	}
 
 Nvidia::~Nvidia()
@@ -17,7 +19,7 @@ Nvidia::~Nvidia()
 
 int Nvidia::Feature()
 	{
-	return m_Feature;
+	return DecoderFeature;
 	}
 
 //
