@@ -9,9 +9,9 @@
 #include "nvcuvid.h"
 
 
-int CUDAAPI SequenceCallback(void *UserData, CUVIDEOFORMAT *VIDEOFORMAT);
-int CUDAAPI DecodePicture	(void *UserData, CUVIDPICPARAMS *PICPARAMS);
-int CUDAAPI DisplayPicture	(void *UserData, CUVIDPARSERDISPINFO *PARSERDISPINFO);
+//int CUDAAPI SequenceCallback(void *UserData, CUVIDEOFORMAT *VIDEOFORMAT);
+//int CUDAAPI DecodePicture	(void *UserData, CUVIDPICPARAMS *PICPARAMS);
+//int CUDAAPI DisplayPicture	(void *UserData, CUVIDPARSERDISPINFO *PARSERDISPINFO);
 
 enum VideoCodecType
 	{

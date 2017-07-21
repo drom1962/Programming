@@ -11,6 +11,14 @@
 
 #include "nvcuvid.h"
 
+enum VideoCodecType
+	{
+	NONE = 0,
+	MJPEG,
+	MPEG4,
+	H264,
+	H265
+	};
 
 
 struct DecoderInfo
@@ -59,7 +67,17 @@ enum
 	Surface			= 0x00001000
 };
 
+//  Для поля Flag
+//
+enum DecoderFlags
+	{
+	CUDA = 0,
+	VP = 1,
+	DXVA = 2,
 
+	Color = 0,
+	BlackWhite = 1
+	};
 
 #pragma pack(push,1)
 struct	BMP 
@@ -79,6 +97,8 @@ public:
 
 	unsigned char	*LocalBuff;		// Локальный буфер под декодированный кадр
 	int				SizeBuff;		// и его размер
+
+	int				LastError;
 
 	DecoderInfo		DI;
 
@@ -129,11 +149,29 @@ static void * MyAlloc(size_t cb, void *oldptr, void *arg);
 //
 //     Декодер через NVIDIA
 //
+
+struct CallBacks
+	{
+	int						Step;
+	// Callback
+	CUVIDEOFORMAT			VIDEO_FORMAT;
+	CUVIDPICPARAMS			PIC_PARAMS;
+	CUVIDPARSERDISPINFO		PARSER_DISP_INFO;
+	};
+
+
 class Nvidia: public Decoder
 {
 private:
-	CUvideoparser   m_Parser;   // Парсер
 
+	CUcontext   	m_ctx;
+
+	CUvideoparser   m_Parser;		// Парсер
+
+	CallBacks		m_CallBacks;	//
+
+	CUvideodecoder	m_Decoder;
+	
 public:
 				Nvidia();
 
@@ -147,8 +185,13 @@ public:
 
 	int			Destroy();
 
-};
+private:
+	int			ParserFrame(Frame *Fr);
 
+	static int CUDAAPI SequenceCallback(void *UserData, CUVIDEOFORMAT *VIDEOFORMAT);
+	static int CUDAAPI DecodePicture(void *UserData, CUVIDPICPARAMS *PICPARAMS);
+	static int CUDAAPI DisplayPicture(void *UserData, CUVIDPARSERDISPINFO *PARSERDISPINFO);
+};
 
 
 #endif
