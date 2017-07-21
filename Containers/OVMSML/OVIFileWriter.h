@@ -4,17 +4,25 @@
 
 #include <container.h>
 
-using namespace Archiv_space;
+using namespace Archive_space;
+using namespace Meta_Data;
 
 namespace Writer
 {
 class OviFileWriter
 	{
 private:
-        Archiv m_Container;
+        Archiv			*m_Container;
 
-		int		m_codec;
+		MetaData		*m_MetaData;
+	
+		int				m_codec;
         
+		unsigned char	m_ED[1024];
+		int				m_sizeED;
+
+		std::wstring	m_NameFile;
+
 	public:
 		OviFileWriter();
 		~OviFileWriter();
@@ -29,12 +37,12 @@ private:
 		HRESULT SaveExtraData   (const char *buffer, unsigned int size);
 		HRESULT SetExtraData    (const char *buffer, unsigned int size);
 
-		bool IsNeedExtraData() const {
-			return m_codec == H264;
-		}
+		bool IsNeedExtraData();
         
 		HRESULT CloseFile();
 
 		static const wchar_t * GetFileExtension() { return L"ovi"; }
+
+		HRESULT WriteMetaData(const char *buffer, unsigned int size, uint64_t time);
 	};
 }

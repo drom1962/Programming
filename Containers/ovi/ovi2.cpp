@@ -6,38 +6,16 @@
 
 #include "common.h"
 
-#ifdef _DECODER_
-#include <OVDecoderTrait.h>
-#endif
-
-#ifdef OVMSML
-//#include "C:\common\Log.h"
-
-//===================================================================================================================================================
-
-#include <stdexcept>
-#include <atltrace.h>
-#include "..\..\New_AVG_CONTROL\CommonDefinitions.h"
-#include "..\..\New_AVG_CONTROL\OVMSML\Utils.h"
-
-//using namespace Writer;
-
-#else
-//#include "C:\common\Log.h"
-
-
-#endif
-
 #include "ovi2.h"
 
 using namespace Archive_space;
 
 //===================================================================================================================================================
-Ver OviVer2={2,0};
+V_e_r OviVer2={2,0};
 
-void OVI2::Version(struct Ver *V)
+void OVI2::Version(struct V_e_r *V)
 	{
-	memcpy(V,&OviVer2,sizeof(Ver));;
+	memcpy(V,&OviVer2,sizeof(V_e_r));;
 	}
 
 
@@ -1069,6 +1047,13 @@ int OVI2::GetFileInfo(FileInfo *FileInfo)
 		}
 
 //
+//  
+//
+int	OVI2::GetFileInfo2(LPCWSTR FileName, FileInfo *FI)
+		{
+		return S_OK;
+		}
+//
 //  Пишем группу кадров. Будер для группы кадров в Мишином формате
 //
 int OVI2::WrireGroupVideoFrames()
@@ -1538,5 +1523,14 @@ int OVI2::Recovery(LPCWSTR FileName)
 		
 	WriteHeader(false);
 
+	return S_OK;
+	}
+
+int		OVI2::InitEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass)
+	{
+	return S_OK;
+	}
+int		OVI2::OpenEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass)
+	{
 	return S_OK;
 	}

@@ -150,7 +150,7 @@ const int base_time = 1000000;
 class  Archiv
 	{
 	public:
-		virtual ~Archiv(){}
+		virtual			~Archiv(){}
 
 		virtual bool	CheckExtension(wchar_t *)=0;
 

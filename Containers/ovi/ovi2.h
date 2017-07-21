@@ -16,7 +16,8 @@ enum VideoCodecType
     H265
 };
 
-#include "container\container.h"
+#include "container.h"
+
 using namespace Archive_space;
 
 #define RefreshVideo		0x01
@@ -250,95 +251,93 @@ public:
 	OVI2(int VerOVSML);
 	~OVI2();
 
-    bool                    CheckExtension(wchar_t * Ext);
+    bool    CheckExtension(wchar_t * Ext);
 
-    Archiv                  * CreateConteiner();
+    Archiv  * CreateConteiner();
 
-	void 					Version(struct Ver*);
+	void 	Version(struct V_e_r*);
 
-	int Create				(LPCWSTR FileName,FileInfo *FileInfo);
+	int		Create				(LPCWSTR FileName,FileInfo *FileInfo);
 
-	int Init				(LPCWSTR FileName,FileInfo *FI);
+	int		Init				(LPCWSTR FileName,FileInfo *FI);
 
-	int	Open				(LPCWSTR FileName,FileInfo *FI);
+	int		Open				(LPCWSTR FileName,FileInfo *FI);
 
-	int IsOpen				();
+	int		IsOpen				();
 
-	int						CheckFile();
+	int		CheckFile();
 
-	DWORD					GetMaxVideoFrame();
+	DWORD	GetMaxVideoFrame();
 
-	unsigned char *			GetLocalBufer();
+	unsigned char *	GetLocalBufer();
 
-	int						SetCurrentFrame(long Index);
+	int		SetCurrentFrame		(long Index);
 
-	long					GetCurrentFrame();
+	long	GetCurrentFrame		();
 
-	int						GetFileInfo			(FileInfo *FileInfo);
+	int		GetFileInfo			(FileInfo *FileInfo);
 
-	int						GetVideoCodec();
+	int		GetFileInfo2		(LPCWSTR FileName, FileInfo *FI);
+
+	int		GetVideoCodec();
 	
-	int						SetFileInfo			(FileInfo *FileInfo);
+	int		SetFileInfo			(FileInfo *FileInfo);
 
-	int						SetExtraData		(unsigned char *ExtraData,DWORD BuffSize);
+	int		SetExtraData		(unsigned char *ExtraData,DWORD BuffSize);
 
-	int						GetExtraData		(unsigned char *ExtraData,DWORD BuffSize,DWORD *SizeExtraData);
+	int		GetExtraData		(unsigned char *ExtraData,DWORD BuffSize,DWORD *SizeExtraData);
 
 	// Автоматически разбивает по группам для H.264 и для MJPG по 
 	//
-	int						WriteVideoFrame(unsigned char *VideoFrame,DWORD SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,DWORD Size);
+	int		WriteVideoFrame(unsigned char *VideoFrame,DWORD SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,DWORD Size);
 
-	int						WrireGroupVideoFrames();
+	int		WrireGroupVideoFrames();
 
-	int						SizeVideoFrame(long IndexFrame);
+	int		SizeVideoFrame(long IndexFrame);
 
-	int						GetInfoVideoFrame(DWORD IndexFrame,VideoFrameInfo *FI);
+	int		GetInfoVideoFrame(DWORD IndexFrame,VideoFrameInfo *FI);
 
-	int						ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
+	int		ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
 
-	int						ReadNextVideoFrame(unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
+	int		ReadNextVideoFrame(unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
 	
-	int						ReadGroupVideoFrame(DWORD VideoChunk);
+	int		ReadGroupVideoFrame(DWORD VideoChunk);
 
-	int						SeekVideoFrameByTime(uint64_t Time,DWORD *IndexFrame);
+	int		SeekVideoFrameByTime(uint64_t Time,DWORD *IndexFrame);
 
-	long					SeekPreviosKeyVideoFrame(long IndexFrame);
+	long	SeekPreviosKeyVideoFrame(long IndexFrame);
 
-	long					SeekNextKeyVideoFrame(long IndexFrame);
+	long	SeekNextKeyVideoFrame(long IndexFrame);
 	
-	int						ReadNextKeyVideoFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
+	int		ReadNextKeyVideoFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
 
-	int						ReadPreviosKeyFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
+	int		ReadPreviosKeyFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *FI);
 
 	// Автоматически разбивает по ...
 	//
-	int						PutAudioFrameIntoBuff(unsigned char *AudioFrame);
+	int		PutAudioFrameIntoBuff(unsigned char *AudioFrame);
+	
+	int		WrireGroupAudioFrames();
 
-	int						WrireGroupAudioFrames();
+	int		ReadAudioFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize);
 
-	int						ReadAudioFrame(DWORD IndexFrame,unsigned char *BuffFrame,DWORD BuffSize);
-
-	int						SeekAudioFrameByTime(uint64_t Time,DWORD *InxedFrame);
+	int		SeekAudioFrameByTime(uint64_t Time,DWORD *InxedFrame);
 	
 
-	int						Refresh(int Count);
+	int		Refresh(int Count);
 	
-	int						Flush();
+	int		Flush();
 	
-	int						Close(FileInfo *FI);
+	int		Close(FileInfo *FI);
 
-	char *					Errors(int Cod);
+	char *	Errors(int Cod);
 
 	int		OVI2::CreateBuff(unsigned char **Buff,int SizeAtom,DWORD SizeBuff,DWORD NewSize);
 
-//#ifdef _DECODER_
-//
-//	// Сервисные функции
-//	DWORD DecodeAllFrame(DWORD StartFrame,DWORD EndFrame,int Step,void Progress(DWORD Index));
-//
-//#endif
-
-	int Recovery(LPCWSTR FileName);
+	int		Recovery(LPCWSTR FileName);
+	
+	int		InitEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass);
+	int		OpenEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass);
 
 private: 
 	

@@ -1,20 +1,38 @@
+#include "string"
+
 #include "OVIFileWriter.h"
 
-OviFileWriter::OviWriter()
+#include "ovi\ovi2.h"
+
+#include "ovi\metadata.h"
+
+using namespace Writer;
+
+OviFileWriter::OviFileWriter()
 	{
-	m_Container=new Archive_space::OVI(1);
+	m_Container	=new OVI2(1);
+
+	m_MetaData = new MTD(1);
+
 	}
 
-OviFileWriter::~OviWriter()
-	{
 
+OviFileWriter::~OviFileWriter()
+	{
+	m_Container->Close(nullptr);
+
+	m_MetaData->Close(nullptr);
 	}
 
 bool OviFileWriter::CreateWriter(VideoCodecType vc)
 	{
+	m_codec = vc;
 	return true;
 	}
 
+//
+//		Создадим файл
+//
 HRESULT OviFileWriter::InitFile(const std::wstring& fileName, const VideoParameters& video, const AudioParameters& audio)
 	{
 	FileInfo FI;
@@ -35,25 +53,15 @@ HRESULT OviFileWriter::InitFile(const std::wstring& fileName, const VideoParamet
 	if (result < 0)  return STG_E_WRITEFAULT;
 
 	if(m_sizeED > 0) m_Container->SetExtraData(m_ED, m_sizeED);
-
-	std::wstring CodecType = L"";
-	codec_ = video.codecType;
-
-	VideoParameters vp;
-	memcpy(&vp, &video, sizeof(vp));
-	result = m_Container->SetVideoParameters(&vp);
-
-	if (result < 0) return E_FAIL;
-
-	AudioParameters ap;
-	memcpy(&ap, &audio, sizeof(ap));
-	//m_Container->SetAudioParameters(&ap);
-
-	if (result < 0) return E_FAIL;
-
+	
+	m_NameFile = fileName;
+	
 	return S_OK;
-}
+	}
 
+//
+//		Сохраним ExtraData
+//
 HRESULT OviFileWriter::SaveExtraData(const char *buffer, unsigned int size)
 	{
 	if(size>255) return E_FAIL;
@@ -65,31 +73,67 @@ HRESULT OviFileWriter::SaveExtraData(const char *buffer, unsigned int size)
 	return S_OK;
 	}
 
+//
+//		Рудемент
+//
 HRESULT OviFileWriter::SetExtraData(const char *buffer, unsigned int size)
-{
-	return m_Container->SetExtraData((unsigned char *)buffer,size);
-}
-
-HRESULT OviFileWriter::CloseFile()
-{
-	return m_Container->Close(nullptr) >= 0 ? S_OK : E_FAIL;
-}
-
-HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, uint64_t time, bool keyFlag )
-{
-	if (!size) {
-		return E_INVALIDARG;
-	}
-	int res = m_Container->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
-	return 0==res ? S_OK : STG_E_WRITEFAULT;
-}
-
-HRESULT OviFileWriter::WriteAudioFrame( const char *buffer, unsigned int size, uint64_t time )
-{
+	{
 	return S_OK;
-}
+	}
 
-bool OviWriter::IsNeedExtraData() const
-{
+//
+//		Закроем
+//
+HRESULT OviFileWriter::CloseFile()
+	{
+	return m_Container->Close(nullptr) >= 0 ? S_OK : E_FAIL;
+	}
+
+//
+//		Запишем кадр
+//
+HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, uint64_t time, bool keyFlag )
+	{
+	if (!size) 
+		{
+		return E_INVALIDARG;
+		}
+
+	int res = m_Container->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
+	
+	return 0==res ? S_OK : STG_E_WRITEFAULT;
+	}
+
+//
+//		Запишем звук
+//
+HRESULT OviFileWriter::WriteAudioFrame( const char *buffer, unsigned int size, uint64_t time )
+	{
+	return S_OK;
+	}
+
+//
+//		Нужна extradata
+//
+bool OviFileWriter::IsNeedExtraData()
+	{
 	return true;
-}
+	}
+
+
+//
+//		*
+//
+HRESULT OviFileWriter::WriteMetaData(const char *buffer, unsigned int size, uint64_t time)
+	{
+	if (!m_MetaData->IsOpen())
+		{
+		// Создадим файл
+
+		m_MetaData->Create()
+		}
+
+
+
+	return S_OK;
+	}
