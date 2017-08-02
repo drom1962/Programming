@@ -2,7 +2,7 @@
 
 #include "OVIFileWriter.h"
 
-#include "ovi\ovi2.h"
+#include "ovi\ovi_container.h"
 
 #include "ovi\metadata.h"
 
@@ -48,7 +48,7 @@ HRESULT OviFileWriter::InitFile(const std::wstring& fileName, const VideoParamet
 	FI.BitsPerSample=audio.BitsPerSample;
 	FI.SamplesPerSec=audio.SamplesPerSec;
 
-	int result = m_Container->Init(fileName.c_str(), &FI);
+	int result = m_Container->Create(fileName.c_str(), &FI);
 
 	if (result < 0)  return STG_E_WRITEFAULT;
 
@@ -86,7 +86,11 @@ HRESULT OviFileWriter::SetExtraData(const char *buffer, unsigned int size)
 //
 HRESULT OviFileWriter::CloseFile()
 	{
-	return m_Container->Close(nullptr) >= 0 ? S_OK : E_FAIL;
+	m_Container->Close(nullptr);
+
+	m_MetaData->Close(nullptr);
+
+	return S_OK;
 	}
 
 //
@@ -99,7 +103,7 @@ HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, u
 		return E_INVALIDARG;
 		}
 
-	int res = m_Container->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
+	int res = m_Container	->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
 	
 	return 0==res ? S_OK : STG_E_WRITEFAULT;
 	}
@@ -109,6 +113,15 @@ HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, u
 //
 HRESULT OviFileWriter::WriteAudioFrame( const char *buffer, unsigned int size, uint64_t time )
 	{
+	wchar_t Buff[128];
+	swprintf_s(Buff,L"\nSize = %d\n",size);
+	
+	OutputDebugString(Buff);
+
+
+	int ret=m_Container->WriteAudioSample((unsigned char *)buffer,size,time);
+
+
 	return S_OK;
 	}
 
@@ -122,18 +135,23 @@ bool OviFileWriter::IsNeedExtraData()
 
 
 //
-//		*
+//		Запись данных
 //
 HRESULT OviFileWriter::WriteMetaData(const char *buffer, unsigned int size, uint64_t time)
 	{
 	if (!m_MetaData->IsOpen())
 		{
 		// Создадим файл
+		MetaDataFileInfo MDFI;
+		memset(&MDFI,0, sizeof(MetaDataFileInfo));
 
-		m_MetaData->Create()
+		m_NameFile.replace(m_NameFile.find(L".ovi"), 4, L".mtd");
+
+		m_MetaData->Create(m_NameFile.c_str(),&MDFI);
 		}
 
-
+	// Запишем
+	m_MetaData->WriteMetaData((unsigned char *)buffer,size,time);
 
 	return S_OK;
 	}

@@ -30,7 +30,9 @@ enum
     OVI_Err1 = 0x20,
     OVI_Err2 = 0x21,
     OVI_Err3 = 0x22,
-    OVI_Err4 = 0x23
+    OVI_Err4 = 0x23,
+	OVI_NotSupport = 0xfe
+
 };
 
 enum
@@ -54,41 +56,45 @@ struct FileInfo
 
 	// Для видео потока
 	unsigned char		VideoCodec;					// Код кодека
-	unsigned int		Width;						// Разрешение
-	unsigned int		Height;
-	unsigned int		VideoBitRate;				// Битрейт
-	unsigned int		GOP;						// GOP
+	uint32_t			Width;						// Разрешение
+	uint32_t			Height;
+	uint32_t			VideoBitRate;				// Битрейт
+	uint32_t			GOP;						// GOP
 	double				FPS;						// FPS
+
 	double				Duration;					// Длина фрагмента
 	DWORD               CountVideoFrame;			// Количество фреймов
 	
 	// Для аудио потока
-	unsigned char		AudioCodec;					// Код кодека
-	unsigned int		BitsPerSample;				// Битрейт
-	unsigned int		SamplesPerSec;
-	DWORD               CountAudioFrame;			// Количество фреймов
+	uint8_t				AudioCodec;					// Код кодека
+	uint32_t			BitsPerSample;				// Битрейт
+	uint32_t			SamplesPerSec;
 
-	DWORD				SizeOviFile;
+	uint32_t            CountAudioFrame;			// Количество фреймов
+
+	uint32_t			SizeOviFile;
 	};
 
 
 
 struct VideoFrameInfo
 	{
-	int					Codec;						// Кодек
-	uint8_t		        TypeFrame;					// Тип кадра
-	DWORD				SizeFrame;					// Размер 
-    DWORD				SizeUserData;				// Размер метаданных
 	uint64_t			TimeFrame;					// Временная метка
+	uint8_t		        TypeFrame;					// Тип кадра
+	uint32_t			SizeFrame;					// Размер 
+    uint32_t			SizeUserData;				// Размер метаданных
+
+	int					Codec;						// Кодек
+	
     unsigned char		*Data;  					// Локальный буфер
 	};
 
-struct CameraInfo
+struct AudioSampleInfo
 	{
-	char Brend[8];
-	char Model[8];
+	uint64_t			TimeFrame;					// Временная метка
+	uint32_t			SizeFrame;					// Размер 
+    unsigned char		*Data;  					// Локальный буфер
 	};
-
 
 struct V_e_r
 	{
@@ -109,7 +115,7 @@ enum Flags : unsigned int
 	};
 
 struct MetaDataFileInfo
-{
+	{
 	unsigned char		Ver;						// Версия контейнера
 	unsigned char		VerOVSML;					// Версия писалки
 
@@ -123,14 +129,14 @@ struct MetaDataFileInfo
 	int					MinObject;
 
 	DWORD               CountMetadataFrame;			// Количество фреймов
-};
+	};
 
 
 
 
 struct MetaDataInfo
 	{
-	DWORD				Size;						// Размер 
+	uint32_t			Size;						// Размер 
 	uint64_t			Time;						// Временная метка
 	unsigned char		*Data;  					// Локальный буфер
 	};
@@ -150,57 +156,66 @@ const int base_time = 1000000;
 class  Archiv
 	{
 	public:
-		virtual			~Archiv(){}
+		virtual				~Archiv(){}
 
-		virtual bool	CheckExtension(wchar_t *)=0;
+		virtual bool		CheckExtension(wchar_t *)=0;
 
-		virtual Archiv *CreateConteiner()=0;
+		virtual Archiv		*CreateConteiner()=0;
 
-        virtual void	Version(V_e_r*)=0;
+        virtual void		Version(V_e_r*)=0;
 
-		virtual int		Init(LPCWSTR FileName,FileInfo *FI)=0;
 
-		virtual int		Open(LPCWSTR FileName,FileInfo *FI)=0;
+		// 
+		virtual int			Create(LPCWSTR FileName,FileInfo *FI)=0;
 
-		virtual	int		IsOpen()=0;
+		virtual int			CreateEx(LPCWSTR FileName, LPCWSTR Pass,FileInfo *FI)=0;
 
-		virtual int		GetFileInfo(FileInfo *FI)=0;
+		virtual int			Open(LPCWSTR FileName,FileInfo *FI)=0;
 
-		virtual int		GetFileInfo2(LPCWSTR FileName,FileInfo *FI)=0;
+		virtual int			OpenEx(LPCWSTR FileName,LPCWSTR Pass,FileInfo *FI)=0;
+		
+		virtual	int			IsOpen()=0;
 
-		virtual	int		SetFileInfo(FileInfo *FileInfo)=0;
+		virtual int			Close(FileInfo *FI)=0;
 
-		virtual int		SetExtraData(unsigned char *ExtraData,DWORD BuffSize)=0;
+		virtual int			GetFileInfo(FileInfo *FI)=0;
 
-		virtual int		GetExtraData(unsigned char *ExtraData,DWORD BuffSize,DWORD *SizeExtraData)=0;
+		virtual	int			SetFileInfo(FileInfo *FileInfo)=0;
 
-		virtual	DWORD	GetMaxVideoFrame()=0;
 
-		virtual int		ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,DWORD BuffSize,VideoFrameInfo *VFI)=0;
+		// Видео часть
+		virtual int			WriteVideoFrame(unsigned char *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,uint32_t Size)=0;
 
-		virtual unsigned char *			GetLocalBufer()=0;
+		virtual int			ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
 
-		virtual int		SeekVideoFrameByTime(uint64_t Time,DWORD *IndexFrame)=0;
+		virtual int			SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame)=0;
 
-		virtual long	SeekPreviosKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekPreviosKeyVideoFrame(long IndexFrame)=0;
 
-		virtual long	SeekNextKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekNextKeyVideoFrame(long IndexFrame)=0;
 
-		virtual int		WriteVideoFrame(unsigned char *VideoFrame,DWORD SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,DWORD Size)=0;
+		virtual int			SetExtraData(unsigned char *ExtraData,uint32_t BuffSize)=0;
 
-		virtual	int		Refresh(int Count)=0;
+		virtual int			GetExtraData(unsigned char *ExtraData,uint32_t BuffSize,uint32_t *SizeExtraData)=0;
+
+		virtual int			GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *VFI)=0;
+
+
+		// Звуковая часть
+		virtual int			WriteAudioSample(unsigned char *Sample,uint32_t SizeSample,uint64_t Time)=0;
+
+		virtual int			ReadAudioSample(uint32_t IndexSample,unsigned char *Sample,uint32_t Size,AudioSampleInfo *ASI)=0;
+
+		virtual long		SeekAudioSampleByTime(uint64_t Time,uint32_t *InxedSample)=0;
+
+
+		// 
+		virtual	int			Refresh(int Count)=0;
 	
-		virtual int		Flush()=0;
-	
-		virtual int		Close(FileInfo *FI)=0;
+		virtual int			Flush()=0;
 
-		virtual int		Recovery(LPCWSTR FileName)=0;
+		virtual int			Recovery(LPCWSTR FileName)=0;
 
-// Шифрование 
-
-		virtual int		InitEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass) = 0;
-
-		virtual int		OpenEx(LPCWSTR FileName, FileInfo *FI, LPCWSTR Pass) = 0;
 	};
  
 } 
@@ -236,12 +251,15 @@ namespace Meta_Data
 
 		// Автоматически разбивает по обьему или по количеству (200 кадров в чанке)
 		//
-		virtual int					WriteMetaData(unsigned char  *MetaData, DWORD Size, uint64_t Time)=0;
+		virtual int					WriteMetaData(unsigned char  *MetaData, uint32_t Size, uint64_t Time)=0;
 
-		virtual int					ReadMetaData(long IndexFrame, unsigned char *BuffFrame, DWORD BuffSize, MetaDataInfo *FI)=0;
+		virtual int					ReadMetaData(long IndexFrame, unsigned char *BuffFrame, uint32_t BuffSize, MetaDataInfo *FI)=0;
 
-		virtual int					SeekMetaDataByTime(uint64_t Time, DWORD *IndexFrame)=0;
+		virtual int					SeekMetaDataByTime(uint64_t Time, uint32_t *IndexFrame)=0;
 
+
+		//
+		//
 		virtual int					Refresh(int Count)=0;
 
 		virtual int					Flush()=0;

@@ -372,7 +372,7 @@ int MTD::Flush()
 //
 //  Запишем видео кадр в буфер + пользовательские данные
 //
-int MTD::WriteMetaData(unsigned char  *MetaData, DWORD Size, uint64_t Time)
+int MTD::WriteMetaData(unsigned char  *MetaData, uint32_t Size, uint64_t Time)
 	{
 	if (m_hFile == nullptr)		return OVI_NotOpen;
 
@@ -540,7 +540,7 @@ int MTD::WrireGroupMetaData()
 
 // Возвращает прочитаную длину. Если 0 то кадр не поместился в буфер
 //
-int MTD::ReadMetaData(long IndexFrame, unsigned char *MetaData, DWORD MetaDataSize, MetaDataInfo *MDI)
+int MTD::ReadMetaData(long IndexFrame, unsigned char *MetaData, uint32_t MetaDataSize, MetaDataInfo *MDI)
 	{
 	if (m_hFile == nullptr)			return OVI_NotOpen;
 
@@ -641,7 +641,7 @@ int MTD::ReadGroupMetadata(DWORD VideoChunk)
 //
 //  Поищем видео фрейм по времени
 //
-int MTD::SeekMetaDataByTime(uint64_t Time, DWORD *IndexFrame)
+int MTD::SeekMetaDataByTime(uint64_t Time, uint32_t *IndexFrame)
 	{
 	if (m_hFile == nullptr) return OVI_NotOpen;
 

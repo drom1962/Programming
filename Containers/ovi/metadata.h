@@ -186,11 +186,11 @@ public:
 
 	// Автоматически разбивает по обьему или по количеству (200 кадров в чанке)
 	//
-	int					WriteMetaData(unsigned char  *MetaData, DWORD Size, uint64_t Time);
+	int					WriteMetaData(unsigned char  *MetaData, uint32_t Size, uint64_t Time);
 
-	int					ReadMetaData(long IndexFrame,unsigned char *BuffFrame,DWORD BuffSize, MetaDataInfo *MDI);
+	int					ReadMetaData(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize, MetaDataInfo *MDI);
 
-	int					SeekMetaDataByTime(uint64_t Time,DWORD *IndexFrame);
+	int					SeekMetaDataByTime(uint64_t Time,uint32_t *IndexFrame);
 
 	int					Refresh(int Count);
 	

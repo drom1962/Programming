@@ -7,13 +7,14 @@
 
 //#include "..\ArchiveData.h"
 
-enum VideoCodecType
+
+enum VideoCodecType2
 {
-    NONE = 0,
-    MJPEG,
-    MPEG4,
-    H264,
-    H265
+    N_O_N_E = 0,
+    M_J_P_E_G,
+    M_P_E_G_4,
+    H_2_6_4,
+    H_2_6_5
 };
 
 #include "container.h"

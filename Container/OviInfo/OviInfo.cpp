@@ -27,6 +27,8 @@ int wmain(int argc, wchar_t* argv[])
 
 	const char *ListCodecs[] = { "NONE","MJPEG","MPEG4","H.264","H.265" };
 
+	const char *AudioCodecs[]= {"MUTE","PCM","ALAW","MULAW","G726","AAC"};
+
 	const char *Keys[] = { "   ","Key"};
 
 	MetaDataFileInfo mFI;
@@ -54,21 +56,26 @@ int wmain(int argc, wchar_t* argv[])
 	fprintf(stream, "Count = %6d   %4d x %4d\n", oFI.CountVideoFrame, oFI.Width, oFI.Height);
 	printf("Count = %6d   %4d x %4d\n",oFI.CountVideoFrame,oFI.Width,oFI.Height);
 
-	fprintf(stream, "\nCodec = %s  FPS=%5.2f   GOP=%3d Duration=%7.2f\n", ListCodecs[oFI.VideoCodec], oFI.FPS, oFI.GOP, oFI.Duration);
-	printf("\nCodec = %s  FPS=%5.2f   GOP=%3d Duration=%7.2f\n", ListCodecs[oFI.VideoCodec],oFI.FPS,oFI.GOP,oFI.Duration);
+	fprintf(stream, "\nCodec = %s  FPS=%5.2f   GOP=%3d Count=%d Duration=%7.2f\n", ListCodecs[oFI.VideoCodec], oFI.FPS, oFI.GOP,oFI.CountVideoFrame, oFI.Duration);
+	printf("\nCodec = %s  FPS=%5.2f   GOP=%3d Count = %d Duration=%7.2f\n", ListCodecs[oFI.VideoCodec],oFI.FPS,oFI.GOP,oFI.CountVideoFrame,oFI.Duration);
 	
+	if (oFI.AudioCodec > 0)
+		{
+		fprintf(stream, "\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioFrame);
+		printf("\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioFrame);
+		}
+
+
 	swprintf_s(File1, L"%smtd", File);
 	ret = mtd1->Open(File1, &mFI);
-	if (ret != 0) 
-		{ 
-		_getch();
-		return 1; 
-		}
-	fprintf(stream, "\nMetaData\n-----------------\n");
-	printf("\nMetaData\n-----------------\n");
+	if (ret == 0)
+		{
+		fprintf(stream, "\nMetaData\n-----------------\n");
+		printf("\nMetaData\n-----------------\n");
 
-	fprintf(stream, "Count =%6d", mFI.CountMetadataFrame);
-	printf("Count =%6d",mFI.CountMetadataFrame);
+		fprintf(stream, "Count =%6d", mFI.CountMetadataFrame);
+		printf("Count =%6d", mFI.CountMetadataFrame);
+		}
 
 	VideoFrameInfo VFI;
 	/*ret = ovi1->ReadVideoFrame(15, nullptr, 0, &VFI);
@@ -114,6 +121,27 @@ int wmain(int argc, wchar_t* argv[])
 		fprintf(stream, "\n%6d - %3s  - %6d", i, Keys[VFI.TypeFrame], VFI.SizeFrame);
 		printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
 		}
+
+	AudioSampleInfo ASI;
+
+	for (DWORD i = 0; i < oFI.CountAudioFrame; i++)
+		{
+		ret = _kbhit();
+		if (ret != 0)
+			{
+			ss = _getch();
+			if (ss == 's') return 0;
+			_getch();
+			}
+
+		ret = ovi1->ReadAudioSample(i, nullptr, 0, &ASI);
+
+		if (ret != 0) return -1;
+		fprintf(stream, "\n%6d - %d", i,  ASI.SizeFrame);
+		printf("\n%6d - %d", i, ASI.SizeFrame);
+	}
+
+
 
 	//printf("\n Time Check key frames= %5.2f\n", tss / 1000.);
 
