@@ -90,12 +90,10 @@ int wmain(int argc, wchar_t* argv[])
 	int ss=_getch();
 	if (ss != 'y') return 0;
 
-	printf("\n  Gooo\n");
-
-
 	ov_decoder::video_codec codec= ov_decoder::vcodec_h264;
 
-	DWORD t0,t00,tss = 0;
+	DWORD t0, t00, tss = 0;
+	DWORD	VideoAll = 0.0;
 	for (DWORD i = 0; i < oFI.CountVideoFrame; i++)
 		{
 		ret = _kbhit();
@@ -119,11 +117,19 @@ int wmain(int argc, wchar_t* argv[])
 		*/
 		if (ret != 0) return -1;
 		fprintf(stream, "\n%6d - %3s  - %6d", i, Keys[VFI.TypeFrame], VFI.SizeFrame);
-		printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
+		//printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
+
+		VideoAll += VFI.SizeFrame;
 		}
 
+
+
+	fprintf(stream, "\nAll = %d ", VideoAll);
+	printf("\nAll = %d ", VideoAll);
+
+
 	AudioSampleInfo ASI;
-	int all = 0;
+	DWORD AudioAll = 0.0;
 	for (DWORD i = 0; i < oFI.CountAudioFrame; i++)
 		{
 		ret = _kbhit();
@@ -137,14 +143,21 @@ int wmain(int argc, wchar_t* argv[])
 		ret = ovi1->ReadAudioSample(i, nullptr, 0, &ASI);
 
 		if (ret != 0) return -1;
-		fprintf(stream, "\n%6d - %d", i,  ASI.SizeFrame);
-		printf("\n%6d - %d", i, ASI.SizeFrame);
-		all += ASI.SizeFrame;
+		fprintf(stream, "\n%d - %d", i,  ASI.SizeFrame);
+		//printf("\n%6d - %d", i, ASI.SizeFrame);
+		AudioAll += ASI.SizeFrame;
 	}
 
-	fprintf(stream,"\nAll = %6d ", all);
-	printf("\nAll = %6d ", all);
+	fprintf(stream,"\nAll = %d ", AudioAll);
+	printf("\nAll = %d ", AudioAll);
 
+
+	fprintf(stream, "\nAll = %d Video=%d   Audio=%d", oFI.SizeOviFile,VideoAll,AudioAll);
+	printf("\nAll = %d Video=%d   Audio=%d", oFI.SizeOviFile, VideoAll, AudioAll);
+	printf(" >>> sum = %d", VideoAll+ AudioAll);
+
+	double xx = static_cast<double>((oFI.SizeOviFile) / (static_cast<double>(VideoAll) + static_cast<double>(AudioAll)));
+	printf("====>>> %6.2f", xx-1.0);
 
 	//printf("\n Time Check key frames= %5.2f\n", tss / 1000.);
 

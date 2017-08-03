@@ -1,30 +1,19 @@
-#include <windows.h>
-#include <stdint.h>
-
-
-#include "..\container.h"
-
 #include "..\common.h"
 
+#include "..\container.h"
 using namespace Archive_space;
 
-
 enum {
-	RefreshVideo		=0x01,
-	RefreshAudio		=0x02,
+	RefreshVideo				= 0x01,
+	RefreshAudio				= 0x02,
 
-	G_O_P				=60,	
-
-	VIDEOBUFFERSIZE		=1024*1024,
-	AUDIOBUFFERSIZE		=1*1024,
-	FRAMEBUFFERSIZE		=128*1024,
-
-    VIDEOMAXFRAMESINTOCHANC	= 200,
-    VIDEOMAXSIZEBLOCK		= 1024 * 1024,
-
-    AUDIOMAXFRAMESINTOCHANC	= 200,
-    AUDIOMAXSIZEBLOCK		=200 * 1024
-
+	VIDEOMAXSIZEBLOCK			= 1024*1024,	// Размер буфера под группу видео кадров
+	FRAMEBUFFERSIZE				= 128*1024,		// Размер кадра
+	VIDEOMAXFRAMESINTOCHANC		= 200,			// Кадров в блоке
+    
+    AUDIOMAXSIZEBLOCK			= 200 * 1024,	// Размер буфера под группу аудио кадров
+	AUDIOBUFFERSIZE				= 1*1024,		// Размер одиночного аудио кадра
+	AUDIOMAXFRAMESINTOCHANC		= 200			// кадров в блоке
 	};
 
 
@@ -35,7 +24,7 @@ enum {
 struct Header_OVI									    
 	{
     uint8_t				Ver;						// Версия контейнера
-    uint8_t				VerOVSML;					// Версия писалки
+    uint32_t			VerOVSML;					// Версия писалки
 
 	uint32_t			Mod;
 
@@ -114,6 +103,9 @@ struct ElementAudioIndex
 	};
 
 
+//
+//		Структура 
+//
 struct VideoChank2
 	{
     uint32_t				NextChank;								// Следующий блок в файле
@@ -124,6 +116,9 @@ struct VideoChank2
 	};
 
 
+//
+//		Структура 
+//
 struct AudioChank
 	{
     uint32_t				NextChank;								// Следующий блок в файле
@@ -298,7 +293,7 @@ public:
 
 	char *					Errors(int Cod);
 
-	int		          OVI2::CreateBuff(unsigned char **Buff,int SizeAtom,DWORD SizeBuff,DWORD NewSize);
+	int						CreateBuff(unsigned char **Buff,int SizeAtom,DWORD SizeBuff,DWORD NewSize);
 
 
 

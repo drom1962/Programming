@@ -32,7 +32,7 @@ OVI2::OVI2(int Ver_OVMSML)
 		m_Flush = 0;
 		c_Flush = 0;
 
-		m_VideoBufferSize		= VIDEOBUFFERSIZE;
+		m_VideoBufferSize		= VIDEOMAXSIZEBLOCK;
 		m_MaxVideoIndex			=30*60*60;
 		m_VideoIndexs			=nullptr;
 		m_VideoFramesIntoBuffers=nullptr;
@@ -42,10 +42,10 @@ OVI2::OVI2(int Ver_OVMSML)
 		m_AudioIndexs			=nullptr;
 		m_MaxAudioIndex			=30*60*60;
 		m_AudioSamplesIntoBuffers=nullptr;
-		m_AudioBufferSize		=AUDIOBUFFERSIZE;
+		m_AudioBufferSize		=AUDIOMAXSIZEBLOCK;
 
-		m_LocalSample		=nullptr;
-		m_SizeLocalSample	=AUDIOBUFFERSIZE;
+		m_LocalSample			=nullptr;
+		m_SizeLocalSample		=AUDIOBUFFERSIZE;
 
 		m_VerOVMSML				=Ver_OVMSML;
 
@@ -64,7 +64,7 @@ OVI2::OVI2(int Ver_OVMSML)
 		AES_STREAM = new AES(256);
 
 		// Флаги
-		m_Crypto = 0;
+		m_Crypto				= 0;
 		m_WriteMetaData			= 0;
 		};
 
@@ -389,24 +389,27 @@ int OVI2::Close(FileInfo *FI)
 			return S_OK;
 			}
 
-		if(m_CurrentVideoFrame==0)	return OVI_Err1;
+		// Файл пишется
+		if(m_CurrentVideoFrame==0 && m_CurrentAudioSample==0)	return OVI_Err1;  // Нет кадров
 		
 		// Сбросим, что осталось в буферах
 		WrireGroupVideoFrames();
 		WrireGroupAudioSamples();
 
-		// Сбросим индексы
 		DWORD Pos=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);
 
-		if(MyWrite(m_VideoIndexs,sizeof(ElementVideoIndex2)*(m_CurrentVideoFrame),0))
+		// Сбросим видео индексы
+		if(m_CurrentVideoFrame>0)
 			{
-			CloseHandle(m_hFile);
-			m_hFile=nullptr;
+			if(MyWrite(m_VideoIndexs,sizeof(ElementVideoIndex2)*(m_CurrentVideoFrame),0))
+				{
+				CloseHandle(m_hFile);
+				m_hFile=nullptr;
 
-			return OVI_NotWrite;
+				return OVI_NotWrite;
+				}
 			}
 
-		// Запишем хедер
 		m_H_OVI.MainVideoIndex=Pos;
 		m_H_OVI.CountVideoFrame=m_CurrentVideoFrame;
 		
@@ -419,8 +422,9 @@ int OVI2::Close(FileInfo *FI)
 			if (((ElementVideoIndex2 *)m_VideoIndexs)[m_H_OVI.GOP].TypeFrame == 1) break;
 			}
 
+		// Сбросим аудио индексы
 		m_H_OVI.CountAudioSample=m_CurrentAudioSample;
-		if(m_H_OVI.AudioCodec>0)
+		if(m_CurrentAudioSample>0)
 			{
 			m_H_OVI.MainAudioIndex=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);
 
@@ -483,7 +487,7 @@ int OVI2::SetExtraData(unsigned char *ExtraData,uint32_t Size)
 		
 		m_H_OVI.ExtraData=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);  // Зафиксируем начало ExtraData
 
-		if(MyWrite(ExtraData,Size,0))		return 999;
+		if(MyWrite(ExtraData,Size,0))			return 999;
 
 		m_H_OVI.SizeExtraData=Size;
 				
@@ -522,8 +526,6 @@ int OVI2::WriteVideoFrame(unsigned char  *Frame,uint32_t SizeFrame,int KeyFlag,u
         if(m_Mod==0)	            return OVI_ReadOnly;
 		
 		ElementVideoIndex2 *EVI2;
-
-		//if( !(((FrameInfoHeader *)Frame)->mType & mtVideoFrame) )	return E_FAIL;  // не видео фрагмент
 
 		// Другой критерий разбиения на группы - по 1М
 		if(m_CountVideoFrameIntoChunk==VIDEOMAXFRAMESINTOCHANC || m_SizeVideoFrames>VIDEOMAXSIZEBLOCK)
@@ -672,62 +674,6 @@ int OVI2::ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffS
 		return S_OK;
 		}
 
-
-//---------------------------------------------------------------------------
-// Прочитаем следующий ключевой кадр
-//---------------------------------------------------------------------------
-//int OVI2::ReadNextKeyVideoFrame(uint32_t IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI)
-//		{
-//		if(m_hFile==nullptr)		return OVI_NotOpen;
-//
-//		if(BuffFrame==nullptr)		return OVI_InvalidBuffer;
-//
-//		for(DWORD i=IndexFrame;i<m_H_OVI.CountVideoFrame;i++)
-//			{
-//			if(((ElementVideoIndex2 *)m_VideoIndexs)[i].TypeFrame) // Ключевой ?
-//				{
-//				// Да
-//				if(FI!=nullptr)
-//					{
-//					// Вернем информацию о фрейме
-//					FI->TypeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].TypeFrame;
-//					FI->SizeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].SizeFrame;
-//                    FI->SizeUserData    =((ElementVideoIndex2 *)m_VideoIndexs)[i].SizeUserData;
-//					FI->TimeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].TimeFrame/10;
-//					}
-//
-//				return ReadVideoFrame(i,BuffFrame,BuffSize,FI);
-//				}
-//			}
-//
-//		return OVI_FrameNone;
-//		}
-
-
-
-//---------------------------------------------------------------------------
-// Прочитаем следующий кадр
-//---------------------------------------------------------------------------
-//int OVI2::ReadNextVideoFrame(unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI)
-//		{
-//		if(m_hFile==nullptr)		return OVI_NotOpen;
-//
-//		if((m_LastReadFrame+1)==(long)m_H_OVI.CountVideoFrame) 
-//			{
-//			if(m_H_OVI.MainVideoIndex==0) 	
-//				{
-//				//ov_util::TRACE("Refreh");
-//				Refresh(5);  // Файл еще пишется
-//				}
-//			if((long)m_H_OVI.CountVideoFrame==(m_LastReadFrame+1))  return OVI_InvalidIndex; 
-//			}
-//
-//		// Перейдем на следующий
-//		m_LastReadFrame++;
-//
-//		// Читаем кадр
-//		return ReadVideoFrame(m_LastReadFrame,BuffFrame,BuffSize,FI);
-//		}
 
 
 
@@ -1798,3 +1744,61 @@ int OVI2::Decrypt(unsigned char *Buff,DWORD Size)
 void OVI2::Debug(void)
 {
 }
+
+
+//---------------------------------------------------------------------------
+// Прочитаем следующий ключевой кадр
+//---------------------------------------------------------------------------
+//int OVI2::ReadNextKeyVideoFrame(uint32_t IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI)
+//		{
+//		if(m_hFile==nullptr)		return OVI_NotOpen;
+//
+//		if(BuffFrame==nullptr)		return OVI_InvalidBuffer;
+//
+//		for(DWORD i=IndexFrame;i<m_H_OVI.CountVideoFrame;i++)
+//			{
+//			if(((ElementVideoIndex2 *)m_VideoIndexs)[i].TypeFrame) // Ключевой ?
+//				{
+//				// Да
+//				if(FI!=nullptr)
+//					{
+//					// Вернем информацию о фрейме
+//					FI->TypeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].TypeFrame;
+//					FI->SizeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].SizeFrame;
+//                    FI->SizeUserData    =((ElementVideoIndex2 *)m_VideoIndexs)[i].SizeUserData;
+//					FI->TimeFrame       =((ElementVideoIndex2 *)m_VideoIndexs)[i].TimeFrame/10;
+//					}
+//
+//				return ReadVideoFrame(i,BuffFrame,BuffSize,FI);
+//				}
+//			}
+//
+//		return OVI_FrameNone;
+//		}
+
+
+
+//---------------------------------------------------------------------------
+// Прочитаем следующий кадр
+//---------------------------------------------------------------------------
+//int OVI2::ReadNextVideoFrame(unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI)
+//		{
+//		if(m_hFile==nullptr)		return OVI_NotOpen;
+//
+//		if((m_LastReadFrame+1)==(long)m_H_OVI.CountVideoFrame) 
+//			{
+//			if(m_H_OVI.MainVideoIndex==0) 	
+//				{
+//				//ov_util::TRACE("Refreh");
+//				Refresh(5);  // Файл еще пишется
+//				}
+//			if((long)m_H_OVI.CountVideoFrame==(m_LastReadFrame+1))  return OVI_InvalidIndex; 
+//			}
+//
+//		// Перейдем на следующий
+//		m_LastReadFrame++;
+//
+//		// Читаем кадр
+//		return ReadVideoFrame(m_LastReadFrame,BuffFrame,BuffSize,FI);
+//		}
+
