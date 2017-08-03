@@ -195,6 +195,9 @@ int OVI2::Create(LPCWSTR FileName,FileInfo *FI)
 		m_CurrentAudioSample=0;
 		m_CountAudioSampleIntoChunk=0;
 
+		m_LastVideoChunk=0;
+		m_LastAudioChunk=0;
+
 		GetFileTime(m_hFile,&m_H_OVI.Time,nullptr,nullptr);
 
 		m_H_OVI.Ver			= 2;
@@ -325,7 +328,6 @@ int OVI2::Open(LPCWSTR FileName,FileInfo *FI)
 			}
 
 		m_CurrentVideoChunk=0;
-		m_LastReadFrame=0;
 		m_VideoPosFrames=0;
 	
 		if(m_H_OVI.MaxSizeVideoFrame==0)
@@ -339,7 +341,9 @@ int OVI2::Open(LPCWSTR FileName,FileInfo *FI)
 					m_H_OVI.MaxSizeVideoFrame=((ElementVideoIndex2 *)m_VideoIndexs)[i].SizeFrame;
 				}
 			}
-
+		
+		m_LastVideoChunk=0;
+		m_LastAudioChunk=0;
 
 		// Есть индекс - почитаем
 		if(ff>0) return OVI_NotClose;
@@ -391,10 +395,6 @@ int OVI2::Close(FileInfo *FI)
 		WrireGroupVideoFrames();
 		WrireGroupAudioSamples();
 
-		// Запишем конечный блок
-		m_VC.NextChank=0xFFFFFFFF;
-		MyWrite((void *)&m_VC,12,0);
-
 		// Сбросим индексы
 		DWORD Pos=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);
 
@@ -419,10 +419,9 @@ int OVI2::Close(FileInfo *FI)
 			if (((ElementVideoIndex2 *)m_VideoIndexs)[m_H_OVI.GOP].TypeFrame == 1) break;
 			}
 
+		m_H_OVI.CountAudioSample=m_CurrentAudioSample;
 		if(m_H_OVI.AudioCodec>0)
 			{
-			m_H_OVI.CountAudioSample=m_CurrentAudioSample;
-
 			m_H_OVI.MainAudioIndex=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);
 
 			if(MyWrite(m_AudioIndexs,sizeof(ElementAudioIndex)*(m_CurrentAudioSample),0))
@@ -437,6 +436,28 @@ int OVI2::Close(FileInfo *FI)
 		WriteHeader(false);
 
 		if(FI!=nullptr) GetFileInfo(FI);
+
+		// Есть видео поток ?
+		if(m_LastVideoChunk!=0)
+			{
+			// Закончим видео блоки
+			MyRead((unsigned char *)&m_VC,12,m_LastVideoChunk);		
+
+			m_VC.NextChank=Pos;
+
+			MyWrite((void *)&m_VC,12,m_LastVideoChunk);		
+			}
+
+		// Есть аудио поток ?
+		if(m_LastAudioChunk!=0)
+			{
+			// Закончим аудио блоки
+			MyRead((unsigned char *)&m_AC,12,m_LastAudioChunk);		
+
+			m_AC.NextChank=Pos;
+
+			MyWrite((void *)&m_AC,12,m_LastAudioChunk);		
+			}
 
 		// Закроем файл
 		CloseHandle(m_hFile);
@@ -590,8 +611,6 @@ int OVI2::WriteVideoFrame(unsigned char  *Frame,uint32_t SizeFrame,int KeyFlag,u
 int OVI2::ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)  
 		{
 		if(m_hFile==nullptr)			return OVI_NotOpen;
-
-		if(IndexFrame<0)  IndexFrame=m_LastReadFrame;
 
 		ElementVideoIndex2 *EVI2;
 
@@ -799,8 +818,6 @@ long OVI2::SeekPreviosKeyVideoFrame(long IndexFrame)
 	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
 
-	if(IndexFrame<0)		IndexFrame=m_LastReadFrame;
-
 	for(;IndexFrame>=0;IndexFrame--)
 		{
 		if(((ElementVideoIndex2 *)m_VideoIndexs)[IndexFrame].TypeFrame==1) // Ключевой ?
@@ -825,14 +842,12 @@ long OVI2::SeekNextKeyVideoFrame(long IndexFrame)
 	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
 
-	if(IndexFrame<0)		Index=m_LastReadFrame+1;
-	else					Index=IndexFrame+1;
+	Index=IndexFrame+1;
 
     for(;Index<m_H_OVI.CountVideoFrame;Index++)
 		{
 		if(((ElementVideoIndex2 *)m_VideoIndexs)[Index].TypeFrame==1) // Ключевой ?
 			{
-			if(IndexFrame<0) m_LastReadFrame=Index-1;
 			return Index;
 			}
 		}
@@ -1401,8 +1416,10 @@ int OVI2::WrireGroupVideoFrames()
 		
 		// Запишем кадры
 		ret=MyWrite(m_VideoBuff,m_SizeVideoFrames,0);
-
+		
 		// Запишем конец цепочки и перейдем на ее начало
+		m_LastVideoChunk=Pos;
+
 		memset(&m_VC,0,12);  // Очистим только заголовок
 
 		ret=MyWrite((void *)&m_VC,12,0);
@@ -1466,6 +1483,8 @@ int OVI2::WrireGroupAudioSamples()
 			m_AC.IndexSample[i].AudioChank=AudioChank;
 			((ElementAudioIndex *)m_AudioIndexs)[m_CurrentAudioSample-m_CountAudioSampleIntoChunk+i].AudioChank=AudioChank;
 			}
+
+		m_LastAudioChunk=Pos;
 
 		// Запишем индексы
 		m_AC.SizeAllSample=m_SizeAudioSamples;

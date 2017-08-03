@@ -59,7 +59,6 @@ struct Header_OVI
 
 
     uint32_t			FirstVideoFrame;			// Начало видео потока в файле
-    uint32_t			EndVideoFrame;				// Конец видео потока в файле
     uint32_t			MainVideoIndex;				// Начало основного видео индекса - в конце файла при закрытии
 
     uint32_t			MaxSizeVideoFrame;			// Максимальный размер фрейма
@@ -75,7 +74,6 @@ struct Header_OVI
     uint32_t            CountAudioSample;			// Количество фреймов
 
     uint32_t			FirstAudioSample;			// Начало аудио потока в файле
-    uint32_t			EndAudioSample;				// Конец аудио потока в файле
     uint32_t			MainAudioIndex;				// Начало основного аудио индекса - в конце файла при закрытии
 
     uint16_t			MaxSizeAudioSample;			// Максимальный размер фрейма
@@ -178,19 +176,22 @@ private:
 	VideoChank2			m_VC;							// Локальные видео индексы
 	uint32_t            m_CountVideoFrameIntoChunk;		// Количество фреймов в группе
 	uint32_t			m_VideoLastNext;				// Последний записаный блок
-	uint32_t			m_LastReadFrame;				// Последний прочитаный фрейм
+
+	uint32_t			m_LastVideoChunk;				// Последний записанный блок
 	uint32_t			m_LastVideoRefresh;
 	uint32_t			m_CurrentVideoChunk;			// Текущая группа кадров
-
 
 	// Буфера для видеокадров
 	uint8_t				*m_VideoBuff;					// Буфер под кадры
 	uint32_t			m_VideoBufferSize;				// и его размер
+	uint8_t				*m_VideoFramesIntoBuffers;
+
 	uint8_t				*m_LocalFrame;					// Буфер под кадр
 	uint32_t			m_SizeLocalFrame;				// и его размер
-	uint8_t				*m_VideoFramesIntoBuffers;
+	
 	uint32_t			m_SizeVideoFrames;				// Текущий размер кадров	
 
+	// Индексы
 	uint8_t			    *m_VideoIndexs;					// Буфер под ниндексы
 	uint32_t			m_MaxVideoIndex;				// и его размер
 
@@ -212,6 +213,7 @@ private:
 	uint8_t				*m_AudioBuff;					// Групповой буфер под аудио кадры
 	uint32_t			m_AudioBufferSize;				// и его размер
 	uint8_t				*m_AudioSamplesIntoBuffers;		// Свободная позиция в буфере
+
 	uint32_t			m_SizeAudioSamples;				// Размер аудио кадров в буфере
 
 	uint8_t				*m_LocalSample;					// Буфер под семпл
@@ -225,6 +227,9 @@ private:
 	uint32_t			m_MaxAudioIndex;				// Максимальное количество элементов в индексе
 
 	uint32_t			m_AudioPosSamples;
+
+	uint32_t			m_LastAudioChunk;				// Последний записанный блок
+
 
     uint64_t		    m_average_frame_time;
 

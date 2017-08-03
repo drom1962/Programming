@@ -123,7 +123,7 @@ int wmain(int argc, wchar_t* argv[])
 		}
 
 	AudioSampleInfo ASI;
-
+	int all = 0;
 	for (DWORD i = 0; i < oFI.CountAudioFrame; i++)
 		{
 		ret = _kbhit();
@@ -139,8 +139,11 @@ int wmain(int argc, wchar_t* argv[])
 		if (ret != 0) return -1;
 		fprintf(stream, "\n%6d - %d", i,  ASI.SizeFrame);
 		printf("\n%6d - %d", i, ASI.SizeFrame);
+		all += ASI.SizeFrame;
 	}
 
+	fprintf(stream,"\nAll = %6d ", all);
+	printf("\nAll = %6d ", all);
 
 
 	//printf("\n Time Check key frames= %5.2f\n", tss / 1000.);

@@ -48,6 +48,8 @@ HRESULT OviFileWriter::InitFile(const std::wstring& fileName, const VideoParamet
 	FI.BitsPerSample=audio.BitsPerSample;
 	FI.SamplesPerSec=audio.SamplesPerSec;
 
+	FI.Mod= Crypto_AES && 5;  // Режим работы контейнера
+
 	int result = m_Container->Create(fileName.c_str(), &FI);
 
 	if (result < 0)  return STG_E_WRITEFAULT;
