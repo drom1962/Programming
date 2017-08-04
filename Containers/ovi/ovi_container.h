@@ -78,16 +78,16 @@ struct Header_OVI
 //
 //		Структура элемента видео индекса
 //
-struct ElementVideoIndex2
+struct ElementVideoIndex
 	{
-	uint64_t			TimeFrame;					// Временная метка
+	uint64_t			Time;						// Временная метка
 	
-    uint32_t			Position;					//  
-    uint32_t			SizeFrame;					// Размер 
+    uint32_t			Offset;						//  
+    uint32_t			Size;						// Размер 
     uint32_t			SizeUserData;				// Размер пользовательских данных
     uint32_t			VideoChank;
 
-	uint8_t     		TypeFrame;					// Тип кадра
+	uint8_t     		Type;						// Тип кадра
 	};
 
 
@@ -96,9 +96,9 @@ struct ElementVideoIndex2
 //
 struct ElementAudioIndex
 	{
-	uint64_t			TimeSample;					// Временная метка
-	uint32_t			Position;					//  
-    uint16_t			SizeSample;					// Размер 
+	uint64_t			Time;						// Временная метка
+	uint32_t			Offset;						//  
+    uint16_t			Size;						// Размер 
     uint32_t			AudioChank;
 	};
 
@@ -106,12 +106,12 @@ struct ElementAudioIndex
 //
 //		Структура 
 //
-struct VideoChank2
+struct VideoChank
 	{
     uint32_t				NextChank;								// Следующий блок в файле
     uint32_t				CountFrameIntoChank;					// Количество фреймов в блоке
 	uint32_t				SizeAllFrames;
-    ElementVideoIndex2		IndexFrame[VIDEOMAXFRAMESINTOCHANC];	// Данные кадра для индекса 
+    ElementVideoIndex		IndexFrame[VIDEOMAXFRAMESINTOCHANC];	// Данные кадра для индекса 
 																	// В конце индексов сами кадры
 	};
 
@@ -168,7 +168,7 @@ private:
 	Header_OVI			m_H_OVI;
 
 	// Робочие переменные для видео
-	VideoChank2			m_VC;							// Локальные видео индексы
+	VideoChank			m_VC;							// Локальные видео индексы
 	uint32_t            m_CountVideoFrameIntoChunk;		// Количество фреймов в группе
 	uint32_t			m_VideoLastNext;				// Последний записаный блок
 
@@ -240,13 +240,13 @@ public:
 
 	//
 	//------------------------
-	int Create				(LPCWSTR FileName,FileInfo *FileInfo);
+	int Create				(const wchar_t *FileName,FileInfo *FileInfo);
 
-	int CreateEx			(LPCWSTR FileName,LPCWSTR Pass,FileInfo *FileInfo);
+	int CreateEx			(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FileInfo);
 
-	int	Open				(LPCWSTR FileName,FileInfo *FI);
+	int	Open				(const wchar_t *FileName,FileInfo *FI);
 
-	int	OpenEx				(LPCWSTR FileName, LPCWSTR Pass,FileInfo *FI);
+	int	OpenEx				(const wchar_t *FileName, LPCWSTR Pass,FileInfo *FI);
 
 	int IsOpen				();
 	
@@ -258,17 +258,17 @@ public:
 	
 	// Автоматически разбивает по обьему или по количеству (200 кадров в чанке)
 	//
-	int						WriteVideoFrame(unsigned char *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,uint32_t Size);
+	int						WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void *UserData,uint32_t Size);
 
-	int						ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
+	int						ReadVideoFrame(long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
 
 	int						SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame);
 
-	long					SeekPreviosKeyVideoFrame(long IndexFrame);
+	long					SeekPreviosKeyVideoFrame(const long IndexFrame);
 
-	long					SeekNextKeyVideoFrame(long IndexFrame);
+	long					SeekNextKeyVideoFrame(const long IndexFrame);
 	
-	int						SetExtraData(unsigned char *ExtraData,uint32_t BuffSize);
+	int						SetExtraData(const void *ExtraData,uint32_t BuffSize);
 
 	int						GetExtraData(unsigned char *ExtraData,uint32_t BuffSize,uint32_t *SizeExtraData);
 
@@ -277,9 +277,9 @@ public:
 
 	// Автоматически разбивает по ...
 	//
-	int						WriteAudioSample(unsigned char *Sample,uint32_t Size,uint64_t Time);
+	int						WriteAudioSample(const void *Sample,uint32_t Size,uint64_t Time);
 	
-	int						ReadAudioSample(uint32_t IndexSample,unsigned char *Sample,uint32_t Size,AudioSampleInfo *ASI);
+	int						ReadAudioSample(uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI);
 
 	long					SeekAudioSampleByTime(uint64_t Time,uint32_t *InxedSample);
 
@@ -320,7 +320,7 @@ private:
 
 	DWORD	MyRead(unsigned char  *Buff,DWORD SizeBuff,DWORD Position);
 	
-	DWORD	MyWrite(void *Buff,DWORD SizeBuff,DWORD Position);
+	DWORD	MyWrite(const void *Buff,DWORD SizeBuff,DWORD Position);
 
 	int		Read_Video_Frame(int Index,unsigned char *BuffFrame,DWORD BuffSize);
 

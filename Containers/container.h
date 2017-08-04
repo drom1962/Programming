@@ -26,7 +26,8 @@ enum
     OVI_E_FAIL = 0x0F,
     OVI_CrcFile_FAIL = 0x10,
     OVI_CrcHeader_FAIL = 0x11,
-    OVI_Max = 0x12,
+	OVI_SmallBuff=0x12,
+    OVI_Max = 0x13,
     OVI_Err1 = 0x20,
     OVI_Err2 = 0x21,
     OVI_Err3 = 0x22,
@@ -63,7 +64,7 @@ struct FileInfo
 	double				FPS;						// FPS
 
 	double				Duration;					// Длина фрагмента
-	DWORD               CountVideoFrame;			// Количество фреймов
+	uint32_t            CountVideoFrame;			// Количество фреймов
 	
 	// Для аудио потока
 	uint8_t				AudioCodec;					// Код кодека
@@ -79,21 +80,21 @@ struct FileInfo
 
 struct VideoFrameInfo
 	{
-	uint64_t			TimeFrame;					// Временная метка
-	uint8_t		        TypeFrame;					// Тип кадра
-	uint32_t			SizeFrame;					// Размер 
+	uint64_t			Time;						// Временная метка
+	uint8_t		        Type;						// Тип кадра
+	uint32_t			Size;						// Размер 
     uint32_t			SizeUserData;				// Размер метаданных
 
 	int					Codec;						// Кодек
 	
-    unsigned char		*Data;  					// Локальный буфер
+    unsigned char		*Frame;  					// Локальный буфер
 	};
 
 struct AudioSampleInfo
 	{
-	uint64_t			TimeFrame;					// Временная метка
-	uint32_t			SizeFrame;					// Размер 
-    unsigned char		*Data;  					// Локальный буфер
+	uint64_t			Time;						// Временная метка
+	uint32_t			Size;						// Размер 
+    unsigned char		*Sample;  					// Локальный буфер
 	};
 
 struct V_e_r
@@ -166,13 +167,13 @@ class  Archiv
 
 
 		// 
-		virtual int			Create(LPCWSTR FileName,FileInfo *FI)=0;
+		virtual int			Create(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			CreateEx(LPCWSTR FileName, LPCWSTR Pass,FileInfo *FI)=0;
+		virtual int			CreateEx(const wchar_t *FileName, LPCWSTR Pass,FileInfo *FI)=0;
 
-		virtual int			Open(LPCWSTR FileName,FileInfo *FI)=0;
+		virtual int			Open(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			OpenEx(LPCWSTR FileName,LPCWSTR Pass,FileInfo *FI)=0;
+		virtual int			OpenEx(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FI)=0;
 		
 		virtual	int			IsOpen()=0;
 
@@ -184,17 +185,17 @@ class  Archiv
 
 
 		// Видео часть
-		virtual int			WriteVideoFrame(unsigned char *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,unsigned char  *UserData,uint32_t Size)=0;
+		virtual int			WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void  *UserData,uint32_t Size)=0;
 
-		virtual int			ReadVideoFrame(long IndexFrame,unsigned char *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
+		virtual int			ReadVideoFrame(long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
 
 		virtual int			SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame)=0;
 
-		virtual long		SeekPreviosKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekPreviosKeyVideoFrame(const long IndexFrame)=0;
 
-		virtual long		SeekNextKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekNextKeyVideoFrame(const long IndexFrame)=0;
 
-		virtual int			SetExtraData(unsigned char *ExtraData,uint32_t BuffSize)=0;
+		virtual int			SetExtraData(const void *ExtraData,uint32_t BuffSize)=0;
 
 		virtual int			GetExtraData(unsigned char *ExtraData,uint32_t BuffSize,uint32_t *SizeExtraData)=0;
 
@@ -202,9 +203,9 @@ class  Archiv
 
 
 		// Звуковая часть
-		virtual int			WriteAudioSample(unsigned char *Sample,uint32_t SizeSample,uint64_t Time)=0;
+		virtual int			WriteAudioSample(const void *Sample,uint32_t SizeSample,uint64_t Time)=0;
 
-		virtual int			ReadAudioSample(uint32_t IndexSample,unsigned char *Sample,uint32_t Size,AudioSampleInfo *ASI)=0;
+		virtual int			ReadAudioSample(uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI)=0;
 
 		virtual long		SeekAudioSampleByTime(uint64_t Time,uint32_t *InxedSample)=0;
 
