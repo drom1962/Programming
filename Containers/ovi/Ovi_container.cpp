@@ -228,7 +228,7 @@ int OVI2::CreateEx(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FI)
 //---------------------------------------------------------------------------
 int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 		{
-		if(m_hFile!=nullptr) return OVI_NotOpen;	
+		if(m_hFile!=nullptr) return OVI_NotClose;	
 		
 		m_hFile=CreateFileW(FileName,
 						 GENERIC_READ,
@@ -249,7 +249,6 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 
 		m_Mod=0;		// Режим чтения
 
-		int i = sizeof(VideoChank);
 		// Почистим память под видео цепочку
 		memset((void *)&m_VC,0,sizeof(VideoChank));
 
@@ -1580,7 +1579,8 @@ int OVI2::WriteHeader(bool Flag)
 
 		if(MyWrite((void *)&ss,sizeof(Header_OVI),0))
 			{
-			return GetLastError();
+			m_Error=GetLastError();
+			return  OVI_NotWrite;
 			}
 
 		if(Flag) Size=SetFilePointer(m_hFile,Pos,nullptr,FILE_BEGIN);
@@ -1609,7 +1609,8 @@ int  OVI2::ReadHeader(Header_OVI *HD)
 		// Прочитаем Версию контейнера
 		if(!ReadFile(m_hFile,&HD->Ver,sizeof(HD->Ver),&Size,nullptr))
 			{
-			return GetLastError();
+			m_Error=GetLastError();
+			return  OVI_NotRead;
 			}
 
 		// Прочтем заголовок
@@ -1687,6 +1688,13 @@ char * OVI2::Errors(int Cod)
 		return "None";
 		}
 
+//
+//   Вернем ошибку
+//
+int OVI2::GetLastError()
+	{
+	return m_Error;
+	}
 
 
 //

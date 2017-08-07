@@ -161,6 +161,8 @@ const int base_time = 1000000;
 class  Archiv
 	{
 	public:
+		uint32_t			m_Error;
+	public:
 		virtual				~Archiv(){}
 
 		virtual bool		CheckExtension(wchar_t *)=0;
@@ -221,6 +223,8 @@ class  Archiv
 
 		virtual int			Recovery(LPCWSTR FileName)=0;
 
+		//
+		virtual int			GetLastError()=0;
 	};
  
 } 
@@ -274,6 +278,7 @@ namespace Meta_Data
 		virtual char *				Errors(int Cod)=0;
 
 		virtual int					Recovery(LPCWSTR FileName)=0;
+	
 	};
 
 }

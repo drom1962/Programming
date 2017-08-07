@@ -304,6 +304,9 @@ public:
 
 	void					Debug(void);
 
+	int						GetLastError();
+
+
 private: 
 
 	int		ReadGroupVideoFrame(uint32_t VideoChunk);

@@ -106,6 +106,7 @@ HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, u
 		}
 
 	int res = m_Container	->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
+	// Можно получить ошибку детально типа GetLastError
 	
 	return 0==res ? S_OK : STG_E_WRITEFAULT;
 	}
