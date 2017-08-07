@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-#include "..\Decoders\decoder.h"
-
 #include "common.h"
 
 const uint16_t Crc16Table[256] = {
@@ -448,6 +446,7 @@ void AES::Debug(void)
 //
 //	  Заполнение header + info бит мап
 //
+/*
 void FillBitMap(void *BM,int Height, int Width)
 	{
 	if (BM == nullptr) return;
@@ -463,3 +462,4 @@ void FillBitMap(void *BM,int Height, int Width)
 	((BMP *)BM)->BM_Info.biPlanes = 1;
 	((BMP *)BM)->BM_Info.biSize = sizeof(BITMAPINFOHEADER);
 	}
+*/

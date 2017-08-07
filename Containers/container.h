@@ -71,9 +71,13 @@ struct FileInfo
 	uint32_t			BitsPerSample;				// Битрейт
 	uint32_t			SamplesPerSec;
 
-	uint32_t            CountAudioFrame;			// Количество фреймов
+	uint32_t            CountAudioSample;			// Количество фреймов
 
 	uint32_t			SizeOviFile;
+
+	// Полезные поля
+	uint32_t			MaxSizeVideoFrame;			// Максимальный видео кадр
+	uint32_t			MaxSizeAudioSample;			// Максимальный аудио кадр
 	};
 
 

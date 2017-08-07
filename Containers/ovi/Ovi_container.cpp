@@ -74,7 +74,7 @@ OVI2::~OVI2()
 		if(m_VideoIndexs!=nullptr)		
 			{
 			// Уделим память под нидексы и ...
-			free((void *)m_VideoIndexs);
+			free(m_VideoIndexs);
 
 			if(m_VideoBuff!=nullptr )		free(m_VideoBuff);
 			if(m_LocalFrame!=nullptr )		free(m_LocalFrame);
@@ -336,17 +336,24 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 		if(m_H_OVI.MaxSizeVideoFrame==0)
 			{
 			// Пощитаем максимальный размер кадра
+			ElementVideoIndex *VI=&((ElementVideoIndex *)m_VideoIndexs)[0];
 
-			for(DWORD i=0;i<m_H_OVI.CountVideoFrame;i++)
+			for(DWORD i=1;i<m_H_OVI.CountVideoFrame;i++)
 				{
-				if(m_H_OVI.MaxSizeVideoFrame<((ElementVideoIndex *)m_VideoIndexs)[i].Size)
-					
-					m_H_OVI.MaxSizeVideoFrame=((ElementVideoIndex *)m_VideoIndexs)[i].Size;
+				if(m_H_OVI.MaxSizeVideoFrame<VI->Size) 	m_H_OVI.MaxSizeVideoFrame=VI->Size;
+
+				VI++;
 				}
 			}
-		
+
+		FI->MaxSizeVideoFrame=m_H_OVI.MaxSizeVideoFrame;
+		FI->MaxSizeAudioSample=m_H_OVI.MaxSizeAudioSample;
+
 		m_LastVideoChunk=0;
 		m_LastAudioChunk=0;
+
+		m_CurrentVideoFrame	=m_H_OVI.CountVideoFrame;
+		m_CurrentAudioSample=m_H_OVI.CountAudioSample;
 
 		// Есть индекс - почитаем
 		if(ff>0) return OVI_NotClose;
@@ -482,7 +489,7 @@ int OVI2::SetExtraData(const void *ExtraData,uint32_t Size)
 		if(m_hFile==nullptr)					return  OVI_NotOpen;	
 
 		// А надо это делвать ?
-		if(Size<=m_H_OVI.SizeExtraData)			return 999;  // Если она вмещается в старую
+		if(Size<=m_H_OVI.SizeExtraData)			return OVI_InvalidBuffer;  // Если она вмещается в старую
 
 		if(m_H_OVI.SizeExtraData>0)				return 888;  // Уже  ее записали
 		if(m_H_OVI.FirstVideoFrame>0)			return 888;  // Уже  ее записали
@@ -512,7 +519,7 @@ int OVI2::GetExtraData(unsigned char *ExtraData,uint32_t Size,uint32_t *SizeExtr
 
 		if(m_H_OVI.ExtraData==0)			return OVI_ExtraNone;
 
-		if(Size<m_H_OVI.SizeExtraData)		return 999;
+		if(Size<m_H_OVI.SizeExtraData)		return OVI_InvalidBuffer;
 						
 		if(SizeExtraData!=nullptr)			*SizeExtraData=m_H_OVI.SizeExtraData;
 		
@@ -530,13 +537,6 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 		
 		ElementVideoIndex *EVI2;
 
-		// Другой критерий разбиения на группы - по 1М
-		if(m_CountVideoFrameIntoChunk==VIDEOMAXFRAMESINTOCHANC || m_SizeVideoFrames>VIDEOMAXSIZEBLOCK)
-			{
-			int res=WrireGroupVideoFrames();
-			if(res) return res;
-			}
-
         if(UserData==nullptr) SizeUserData=0;
 
         DWORD TotalSizeFrame=SizeFrame+SizeUserData;
@@ -546,6 +546,7 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 
         if (m_CurrentVideoFrame == m_MaxVideoIndex)
             {
+			// Увеличим пямять под главный индекс
             CreateBuff(&m_VideoIndexs, sizeof(ElementVideoIndex), m_MaxVideoIndex, m_MaxVideoIndex + 1024);
             m_MaxVideoIndex += 1024;
             }
@@ -569,6 +570,7 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 		// Сохраним кадр в буфере
 		if(m_VideoBufferSize < m_SizeVideoFrames+TotalSizeFrame)
 			{
+			// Увеличим память 
 			DWORD xx=m_SizeVideoFrames+TotalSizeFrame;
 
 			CreateBuff(&m_VideoBuff,1,m_VideoBufferSize,xx);
@@ -600,6 +602,13 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 
 		m_CountVideoFrameIntoChunk++;
 
+		// Другой критерий разбиения на группы - по 1М
+		if(m_CountVideoFrameIntoChunk==VIDEOMAXFRAMESINTOCHANC || m_SizeVideoFrames>VIDEOMAXSIZEBLOCK)
+			{
+			int res=WrireGroupVideoFrames();
+			if(res) return res;
+			}
+
 		return S_OK;
 		}
 
@@ -614,11 +623,23 @@ int OVI2::ReadVideoFrame(long IndexFrame,void *Buff,uint32_t Size,VideoFrameInfo
 
 		ElementVideoIndex *EVI2;
 
+		// Проверим границы инждекса
+		if(IndexFrame<0 || IndexFrame>=m_CurrentVideoFrame) return OVI_InvalidIndex;
+
 		EVI2 = &((ElementVideoIndex *)m_VideoIndexs)[IndexFrame];
 
         DWORD TotalSizeFrame=EVI2->Size + EVI2->SizeUserData;
 
-		if(Buff!=nullptr && Size<=TotalSizeFrame) return 555;  // кода пока нет
+		if(Buff!=nullptr && Size<=TotalSizeFrame) 
+			{
+			// Передадим размер данных
+			if(VFI!=nullptr) 
+				{ 
+				VFI->Size=EVI2->Size;
+				VFI->SizeUserData=EVI2->SizeUserData;
+				}
+			return OVI_InvalidBuffer;  
+			}
 
 		int	res=S_OK;
 
@@ -693,7 +714,7 @@ int OVI2::GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *VFI)
 	{
 	if(m_hFile==nullptr) return OVI_NotOpen;
 	
-	if (IndexFrame<0 || IndexFrame>m_H_OVI.CountVideoFrame)  return -1;
+	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
 
 	if (VFI != nullptr)
 		{
@@ -769,6 +790,8 @@ long OVI2::SeekPreviosKeyVideoFrame(long IndexFrame)
 	{
 	if(m_hFile==nullptr)	return OVI_NotOpen;
 
+	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
+
 	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
 
@@ -792,6 +815,8 @@ long OVI2::SeekNextKeyVideoFrame(long IndexFrame)
 	DWORD Index;
 
 	if(m_hFile==nullptr)	return OVI_NotOpen;
+
+	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
 
 	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
@@ -888,9 +913,17 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 		ElementAudioIndex *AUI;
 		int res=S_OK;
 
+		// Проверим границы инждекса
+		if(IndexSample<0 || IndexSample>=m_CurrentAudioSample) return OVI_InvalidIndex;
+
 		AUI = &((ElementAudioIndex *)m_AudioIndexs)[IndexSample];
 
-		if(AudioSample!=nullptr && SizeSample<=AUI->Size) return 555;  // кода пока нет
+		if(AudioSample!=nullptr && SizeSample<=AUI->Size) 
+			{
+			// Передадим размер данных
+			if(ASI!=nullptr) ASI->Size=AUI->Size;
+			return OVI_InvalidBuffer;  
+			}
 
 		if(AUI->AudioChank!=m_CurrentAudioChunk)
 			{
@@ -899,7 +932,6 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 			
 			// Сохраним ее позицию
 			m_CurrentAudioChunk= AUI->AudioChank;
-
 			}
 		
 		DWORD Pos= AUI->Offset-m_AudioPosSamples;  
@@ -950,8 +982,6 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 //---------------------------------------------------------------------------
 long OVI2::SeekAudioSampleByTime(uint64_t Time,uint32_t *IndexSample)
 	{
-	if(m_hFile==nullptr) return OVI_NotOpen;
-	
 	if(m_hFile==nullptr) return OVI_NotOpen;
 
 	if(m_H_OVI.MainAudioIndex==0) Refresh(5);
@@ -1022,14 +1052,11 @@ int OVI2::SetFileInfo(FileInfo *FileInfo)
 			m_H_OVI.Time			=FileInfo->Time;
 
 			m_H_OVI.GOP				=FileInfo->GOP;
-			m_H_OVI.Duration		=FileInfo->Duration;
-			m_H_OVI.CountVideoFrame	=FileInfo->CountVideoFrame;
 
 			m_H_OVI.AudioCodec		=FileInfo->AudioCodec;
 			m_H_OVI.BitsPerSample	=FileInfo->AudioCodec;
 			m_H_OVI.SamplesPerSec	=FileInfo->SamplesPerSec;
-			m_H_OVI.CountAudioSample=FileInfo->CountAudioFrame;
-
+			
 			return WriteHeader(true);
 			}
 
@@ -1066,7 +1093,10 @@ int OVI2::GetFileInfo(FileInfo *FileInfo)
 			FileInfo->AudioCodec		=m_H_OVI.AudioCodec;
 			FileInfo->BitsPerSample		=m_H_OVI.BitsPerSample;
 			FileInfo->SamplesPerSec		=m_H_OVI.SamplesPerSec;
-			FileInfo->CountAudioFrame	=m_H_OVI.CountAudioSample;
+			FileInfo->CountAudioSample	=m_H_OVI.CountAudioSample;
+
+			FileInfo->MaxSizeVideoFrame	=m_H_OVI.MaxSizeVideoFrame;
+			FileInfo->MaxSizeAudioSample=m_H_OVI.MaxSizeAudioSample;
 
 			FileInfo->SizeOviFile		=m_SizeOviFile;
 			}
