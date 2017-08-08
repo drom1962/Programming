@@ -133,7 +133,7 @@ struct MetaDataFileInfo
 	int					Width;
 	int					MinObject;
 
-	DWORD               CountMetadataFrame;			// Количество фреймов
+	DWORD               CountMetaDataFrame;			// Количество фреймов
 	};
 
 
@@ -175,11 +175,11 @@ class  Archiv
 		// 
 		virtual int			Create(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			CreateEx(const wchar_t *FileName, LPCWSTR Pass,FileInfo *FI)=0;
+		virtual int			CreateEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)=0;
 
 		virtual int			Open(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			OpenEx(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FI)=0;
+		virtual int			OpenEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)=0;
 		
 		virtual	int			IsOpen()=0;
 
@@ -187,19 +187,19 @@ class  Archiv
 
 		virtual int			GetFileInfo(FileInfo *FI)=0;
 
-		virtual	int			SetFileInfo(FileInfo *FileInfo)=0;
+		virtual	int			SetFileInfo(const FileInfo *FileInfo)=0;
 
 
 		// Видео часть
 		virtual int			WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void  *UserData,uint32_t Size)=0;
 
-		virtual int			ReadVideoFrame(long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
+		virtual int			ReadVideoFrame(const long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
 
-		virtual int			SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame)=0;
+		virtual int			SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame)=0;
 
-		virtual long		SeekPreviosKeyVideoFrame(const long IndexFrame)=0;
+		virtual long		SeekPreviosKeyVideoFrame(long IndexFrame)=0;
 
-		virtual long		SeekNextKeyVideoFrame(const long IndexFrame)=0;
+		virtual long		SeekNextKeyVideoFrame(long IndexFrame)=0;
 
 		virtual int			SetExtraData(const void *ExtraData,uint32_t BuffSize)=0;
 
@@ -211,17 +211,17 @@ class  Archiv
 		// Звуковая часть
 		virtual int			WriteAudioSample(const void *Sample,uint32_t SizeSample,uint64_t Time)=0;
 
-		virtual int			ReadAudioSample(uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI)=0;
+		virtual int			ReadAudioSample(const uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI)=0;
 
-		virtual long		SeekAudioSampleByTime(uint64_t Time,uint32_t *InxedSample)=0;
+		virtual long		SeekAudioSampleByTime(const uint64_t Time,uint32_t *InxedSample)=0;
 
 
 		// 
-		virtual	int			Refresh(int Count)=0;
+		virtual	int			Refresh(const int Count)=0;
 	
 		virtual int			Flush()=0;
 
-		virtual int			Recovery(LPCWSTR FileName)=0;
+		virtual int			Recovery(const wchar_t *FileName)=0;
 
 		//
 		virtual int			GetLastError()=0;

@@ -1,3 +1,4 @@
+
 #include <windows.h>
 
 #include <stdio.h>
@@ -217,7 +218,7 @@ int OVI2::Create(const wchar_t *FileName,FileInfo *FI)
 //---------------------------------------------------------------------------
 //  Создадим файл
 //---------------------------------------------------------------------------
-int OVI2::CreateEx(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FI)
+int OVI2::CreateEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)
 	{
 	return OVI_NotSupport;
 	}
@@ -345,9 +346,6 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 				}
 			}
 
-		FI->MaxSizeVideoFrame=m_H_OVI.MaxSizeVideoFrame;
-		FI->MaxSizeAudioSample=m_H_OVI.MaxSizeAudioSample;
-
 		m_LastVideoChunk=0;
 		m_LastAudioChunk=0;
 
@@ -364,7 +362,7 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 //---------------------------------------------------------------------------
 //  Откроем на чтение наш контейнер
 //---------------------------------------------------------------------------
-int OVI2::OpenEx(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FI)
+int OVI2::OpenEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)
 	{
 	return OVI_NotSupport;
 	}
@@ -490,9 +488,9 @@ int OVI2::SetExtraData(const void *ExtraData,uint32_t Size)
 		// А надо это делвать ?
 		if(Size<=m_H_OVI.SizeExtraData)			return OVI_InvalidBuffer;  // Если она вмещается в старую
 
-		if(m_H_OVI.SizeExtraData>0)				return 888;  // Уже  ее записали
-		if(m_H_OVI.FirstVideoFrame>0)			return 888;  // Уже  ее записали
-		if(m_H_OVI.FirstAudioSample>0)			return 888;  // Уже  ее записали
+		if(m_H_OVI.SizeExtraData>0)				return OVI_ReadOnly;  // Уже  ее записали
+		if(m_H_OVI.FirstVideoFrame>0)			return OVI_ReadOnly;  // Уже  ее записали
+		if(m_H_OVI.FirstAudioSample>0)			return OVI_ReadOnly;  // Уже  ее записали
 		
 		m_H_OVI.ExtraData=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);  // Зафиксируем начало ExtraData
 
@@ -514,7 +512,7 @@ int OVI2::GetExtraData(unsigned char *ExtraData,uint32_t Size,uint32_t *SizeExtr
 		{
 		if(m_hFile==nullptr)				return OVI_NotOpen;	
 
-		if(ExtraData==nullptr)				return S_OK;
+		if(ExtraData==nullptr)				return OVI_ExtraNone;
 
 		if(m_H_OVI.ExtraData==0)			return OVI_ExtraNone;
 
@@ -528,6 +526,15 @@ int OVI2::GetExtraData(unsigned char *ExtraData,uint32_t Size,uint32_t *SizeExtr
 //---------------------------------------------------------------------------
 //  Запишем видео кадр в буфер + пользовательские данные
 //---------------------------------------------------------------------------
+//  Frame			-	Буфер с кадром
+//	Sizeframe		-	Размер кадра
+//	KeyFlag			-	Тип кадра
+//	Time			-	Временная метка кадра
+//	UserData		-	Дополнительные данные к кадру (например данные детектора)
+//	SizeUserData	-	И их размер
+//
+//  P.S. Кадра пишутся группами и перед каджой группой пишется локальный индекс кадров этой группы. Разбиение на группы по кличеству кадров
+//       или по размеру.
 int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void *UserData,uint32_t SizeUserData)
 		{
 		if(m_hFile==nullptr)		return OVI_NotOpen;
@@ -616,7 +623,14 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 //---------------------------------------------------------------------------
 // Возвращает прочитаную длину. Если 0 то кадр не поместился в буфер
 //---------------------------------------------------------------------------
-int OVI2::ReadVideoFrame(long IndexFrame,void *Buff,uint32_t Size,VideoFrameInfo *VFI)  
+//	IndexFrame		-	Номер кадра
+//	Buff			-	Буфер под кадр + пользовательские данные
+//	Size			-	Размер буфера
+//	VFI				-	Структура содержащая информацию о кадре
+//
+//	P.S.	Если Buff задать нулевым, то кадр запишется в локальный буфер и в VFI будет он передан
+//          если размер буфера меньше размера кадра, то в струтуре будет возвращен его размер кадра
+int OVI2::ReadVideoFrame(const long IndexFrame,void *Buff,uint32_t Size,VideoFrameInfo *VFI)  
 		{
 		if(m_hFile==nullptr)			return OVI_NotOpen;
 
@@ -703,27 +717,25 @@ int OVI2::ReadVideoFrame(long IndexFrame,void *Buff,uint32_t Size,VideoFrameInfo
 		}
 
 
-
-
-
 //---------------------------------------------------------------------------
 // Прочитаем информацию о кадре
 //---------------------------------------------------------------------------
-int OVI2::GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *VFI)
+int OVI2::GetInfoVideoFrame(const uint32_t IndexFrame,VideoFrameInfo *VFI)
 	{
 	if(m_hFile==nullptr) return OVI_NotOpen;
 	
-	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
+	if (IndexFrame<0 || IndexFrame>=m_CurrentVideoFrame)  return OVI_InvalidIndex;
 
 	if (VFI != nullptr)
 		{
+		ElementVideoIndex *VI=&((ElementVideoIndex *)m_VideoIndexs)[IndexFrame];
 		// Вернем информацию о фрейме
 		VFI->Codec			= m_H_OVI.VideoCodec;
-		VFI->Type			= ((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].Type;
-		VFI->Size			= ((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].Size;
+		VFI->Type			= VI->Type;
+		VFI->Size			= VI->Size;
 		VFI->Frame			= nullptr;
-		VFI->SizeUserData	= ((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].SizeUserData;
-		VFI->Time			= ((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].Time;
+		VFI->SizeUserData	= VI->SizeUserData;
+		VFI->Time			= VI->Time;
 		}
 
 	return S_OK;
@@ -734,7 +746,7 @@ int OVI2::GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *VFI)
 //---------------------------------------------------------------------------
 //  Поищем видео фрейм по времени
 //---------------------------------------------------------------------------
-int OVI2::SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame)
+int OVI2::SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame)
 	{
 	if(m_hFile==nullptr) return OVI_NotOpen;
 
@@ -742,7 +754,7 @@ int OVI2::SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame)
 
 
 	DWORD	First=1,
-			End= m_H_OVI.CountVideoFrame,
+			End= m_CurrentVideoFrame,
 			ss;
 
 	// Ускорим поиск метод деления плополам (примерно в два раза)
@@ -789,16 +801,17 @@ long OVI2::SeekPreviosKeyVideoFrame(long IndexFrame)
 	{
 	if(m_hFile==nullptr)	return OVI_NotOpen;
 
-	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
+	if (IndexFrame<0 || IndexFrame>=m_CurrentVideoFrame)  return OVI_InvalidIndex;
 
-	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
+	// ????
+	//if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
 
 	for(;IndexFrame>=0;IndexFrame--)
 		{
 		if(((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].Type==1) // Ключевой ?
 			{
-			return IndexFrame;
+			break;  // Да
 			}
 		}
 
@@ -811,32 +824,39 @@ long OVI2::SeekPreviosKeyVideoFrame(long IndexFrame)
 //---------------------------------------------------------------------------
 long OVI2::SeekNextKeyVideoFrame(long IndexFrame)
 	{
-	DWORD Index;
-
 	if(m_hFile==nullptr)	return OVI_NotOpen;
 
-	if (IndexFrame<0 || IndexFrame>=m_H_OVI.CountVideoFrame)  return OVI_InvalidIndex;
+	if (IndexFrame<0 || IndexFrame>=m_CurrentVideoFrame)  return OVI_InvalidIndex;
 
+	// ??? это спорный вопрос
 	if(m_Mod==1)			return OVI_NotOpen;  // Работает только для открытых файлов    
 	// ... m_Mod=0
 
-	Index=IndexFrame+1;
+	IndexFrame++;
 
-    for(;Index<m_H_OVI.CountVideoFrame;Index++)
+    for(;IndexFrame<m_CurrentVideoFrame;IndexFrame++)
 		{
-		if(((ElementVideoIndex *)m_VideoIndexs)[Index].Type==1) // Ключевой ?
+		if(((ElementVideoIndex *)m_VideoIndexs)[IndexFrame].Type==1) // Ключевой ?
 			{
-			return Index;
+			break;  // Да
 			}
 		}
 
-	return Index;
+	return IndexFrame;
 	}
 
 
 //---------------------------------------------------------------------------
 //  Запишем аудио фрейм 
 //---------------------------------------------------------------------------
+//	IndexFrame		-	Номер кадра
+//	Buff			-	Буфер под кадр + пользовательские данные
+//	Size			-	Размер буфера
+//	VFI				-	Структура содержащая информацию о кадре
+//
+//	P.S.	Если Buff задать нулевым, то кадр запишется в локальный буфер и в VFI он будет  передан
+//          если размер буфера меньше размера кадра, то в струтуре будет возвращен его размер кадра
+
 int	OVI2::WriteAudioSample(const void *AudioSample,uint32_t SizeSample,uint64_t Time)
 	{
 	if(m_hFile==nullptr)		return OVI_NotOpen;
@@ -844,8 +864,7 @@ int	OVI2::WriteAudioSample(const void *AudioSample,uint32_t SizeSample,uint64_t 
     if(m_Mod==0)	            return OVI_ReadOnly;
 		
 	ElementAudioIndex *EAU;
-
-
+	
 	// Другой критерий разбиения на группы - по 1М
 	if(m_CountAudioSampleIntoChunk==AUDIOMAXFRAMESINTOCHANC || m_SizeAudioSamples>AUDIOMAXSIZEBLOCK)
 		{
@@ -905,7 +924,15 @@ int	OVI2::WriteAudioSample(const void *AudioSample,uint32_t SizeSample,uint64_t 
 //---------------------------------------------------------------------------
 //  Прочтем аудио фрейм 
 //---------------------------------------------------------------------------
-int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t SizeSample,AudioSampleInfo *ASI)
+//	IndexSample		-	Номер кадра
+//	Buff			-	Буфер под кадр
+//	Size			-	Размер буфера
+//	VFI				-	Структура содержащая информацию о кадре
+//
+//	P.S.	Если Buff задать нулевым, то кадр запишется в локальный буфер и в VFI будет он передан
+//          если размер буфера меньше размера кадра, то в струтуре будет возвращен его размер кадра
+
+int OVI2::ReadAudioSample(uint32_t IndexSample,const void *Buff,uint32_t Size,AudioSampleInfo *ASI)
 		{
 		if(m_hFile==nullptr) return OVI_NotOpen;
 
@@ -917,7 +944,7 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 
 		AUI = &((ElementAudioIndex *)m_AudioIndexs)[IndexSample];
 
-		if(AudioSample!=nullptr && SizeSample<=AUI->Size) 
+		if(Buff!=nullptr && Size<=AUI->Size) 
 			{
 			// Передадим размер данных
 			if(ASI!=nullptr) ASI->Size=AUI->Size;
@@ -935,33 +962,34 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 		
 		DWORD Pos= AUI->Offset-m_AudioPosSamples;  
 
-		if(AudioSample!=nullptr)
+		if(Buff!=nullptr)
 			{
-			if(AUI->Size<=SizeSample)
+			if(AUI->Size<=Size)
 				{
 				// Возьмем  кадр из буфера кадров
-				memcpy((void *)AudioSample,m_AudioBuff+Pos,SizeSample);
+				memcpy((void *)Buff,m_AudioBuff+Pos,Size);
 				}
 			else
 				{
 				// Маленький буфер под семпл
+				if(ASI!=nullptr) ASI->Size=AUI->Size;
 				res=OVI_SmallBuff;
 				}
 			}
 		else
 			{
 			// Скопируем во внутренний буфер
-			if(m_SizeLocalSample<SizeSample) 
+			if(m_SizeLocalSample<Size) 
 				{
 				// Расширим буфер НА 120 ПРОЦЕНТОВ
-				DWORD xx=static_cast<DWORD>(SizeSample*1.2);
+				DWORD xx=static_cast<DWORD>(Size*1.2);
 
 				if(CreateBuff(&m_LocalSample,1,m_SizeLocalSample,xx)) return OVI_NotAlloc;  // Для чтения кадра во внутренний буфер
 
 				m_SizeLocalSample=xx;
 				}
 
-			memcpy(m_LocalSample,m_AudioBuff+Pos,SizeSample); 
+			memcpy(m_LocalSample,m_AudioBuff+Pos,Size); 
 			}
 
 		if(ASI!=nullptr)
@@ -979,14 +1007,14 @@ int OVI2::ReadAudioSample(uint32_t IndexSample,const void *AudioSample,uint32_t 
 //---------------------------------------------------------------------------
 //  Поищем аудио фрейм по времени
 //---------------------------------------------------------------------------
-long OVI2::SeekAudioSampleByTime(uint64_t Time,uint32_t *IndexSample)
+long OVI2::SeekAudioSampleByTime(const uint64_t Time,uint32_t *IndexSample)
 	{
 	if(m_hFile==nullptr) return OVI_NotOpen;
 
 	if(m_H_OVI.MainAudioIndex==0) Refresh(5);
 	
 	DWORD	First=1,
-			End= m_H_OVI.CountAudioSample,
+			End= m_CurrentAudioSample,
 			ss;
 
 	// Ускорим поиск метод деления плополам (примерно в два раза)
@@ -1027,12 +1055,10 @@ long OVI2::SeekAudioSampleByTime(uint64_t Time,uint32_t *IndexSample)
 	}
 
 
-
-
 //---------------------------------------------------------------------------
-//  Прочитаем данные о файле из заголовка
+//  Изменим данные о файле в заголовке
 //---------------------------------------------------------------------------
-int OVI2::SetFileInfo(FileInfo *FileInfo)
+int OVI2::SetFileInfo(const FileInfo *FileInfo)
 		{
 		if(m_hFile==nullptr) return OVI_NotOpen;
 
@@ -1133,7 +1159,7 @@ int OVI2::Flush()
 
 
 //
-// Перечитаем данные
+// Раскручиваем индексы из блочных индексов
 //
 int OVI2::Refresh(int Count)  
 		{
@@ -1358,6 +1384,7 @@ int OVI2::ReadGroupAudioSamples(uint32_t AudioChunk)
 //
 //  Пишем группу кадров.
 //
+// P.S. Пишем заголок блока + локальные индексы и сами кадры с пользовательскими данными
 int OVI2::WrireGroupVideoFrames()
 		{
 		int ret;
@@ -1430,6 +1457,8 @@ int OVI2::WrireGroupVideoFrames()
 //---------------------------------------------------------------------------
 //  Запишем группу аудио фреймов на диск
 //---------------------------------------------------------------------------
+//
+// P.S. Пишем заголок блока + локальные индексы и сами кадры с пользовательскими данными
 int OVI2::WrireGroupAudioSamples()
 		{
 		if(m_hFile==nullptr) return OVI_NotOpen;
@@ -1503,7 +1532,7 @@ int OVI2::WrireGroupAudioSamples()
 //
 //  Мое чтение
 //
-DWORD OVI2::MyRead(unsigned char *Buff,DWORD SizeRead,DWORD Position)
+DWORD OVI2::MyRead(unsigned char *Buff,DWORD SizeBuff,DWORD Position)
 		{
 		DWORD Pos;
 		
@@ -1515,12 +1544,12 @@ DWORD OVI2::MyRead(unsigned char *Buff,DWORD SizeRead,DWORD Position)
 			}
 
 		// Прочтем
-		if(!ReadFile(m_hFile,(void *)Buff,SizeRead,&Pos,nullptr))
+		if(!ReadFile(m_hFile,(void *)Buff,SizeBuff,&Pos,nullptr))
 			{
 			return GetLastError();
 			}
 
-		if(Pos!=SizeRead) return OVI_Err3;
+		if(Pos!=SizeBuff) return OVI_Err3;
 
 		return S_OK;
 		}
@@ -1634,7 +1663,7 @@ int  OVI2::ReadHeader(Header_OVI *HD)
 
 
 //
-//  Выдели память под основной индекс
+//  Выдели память или расширим
 //
 int OVI2::CreateBuff(unsigned char **Buff,int SizeAtom,DWORD SizeBuff,DWORD NewSize)
 		{

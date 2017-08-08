@@ -1,6 +1,7 @@
 #ifndef _COMMON_
 #define _COMMON_
 
+#include <Windows.h>
 
 #include <stdint.h> 
 

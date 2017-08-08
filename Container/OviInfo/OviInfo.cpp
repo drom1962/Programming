@@ -61,8 +61,8 @@ int wmain(int argc, wchar_t* argv[])
 	
 	if (oFI.AudioCodec > 0)
 		{
-		fprintf(stream, "\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioFrame);
-		printf("\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioFrame);
+		fprintf(stream, "\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioSample);
+		printf("\nCodec = %s  BitsPerSample= %1d  SamplesPerSec=%4d  Count = %d\n", AudioCodecs[oFI.AudioCodec], oFI.BitsPerSample, oFI.SamplesPerSec, oFI.CountAudioSample);
 		}
 
 
@@ -73,8 +73,8 @@ int wmain(int argc, wchar_t* argv[])
 		fprintf(stream, "\nMetaData\n-----------------\n");
 		printf("\nMetaData\n-----------------\n");
 
-		fprintf(stream, "Count =%6d", mFI.CountMetadataFrame);
-		printf("Count =%6d", mFI.CountMetadataFrame);
+		fprintf(stream, "Count =%6d", mFI.CountMetaDataFrame);
+		printf("Count =%6d", mFI.CountMetaDataFrame);
 		}
 
 	VideoFrameInfo VFI;
@@ -116,10 +116,10 @@ int wmain(int argc, wchar_t* argv[])
 		tss += (t00 - t0);
 		*/
 		if (ret != 0) return -1;
-		fprintf(stream, "\n%6d - %3s  - %6d", i, Keys[VFI.TypeFrame], VFI.SizeFrame);
+		fprintf(stream, "\n%6d - %3s  - %6d", i, Keys[VFI.Type], VFI.Size);
 		//printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
 
-		VideoAll += VFI.SizeFrame;
+		VideoAll += VFI.Size;
 		}
 
 
@@ -130,7 +130,7 @@ int wmain(int argc, wchar_t* argv[])
 
 	AudioSampleInfo ASI;
 	DWORD AudioAll = 0.0;
-	for (DWORD i = 0; i < oFI.CountAudioFrame; i++)
+	for (DWORD i = 0; i < oFI.CountAudioSample; i++)
 		{
 		ret = _kbhit();
 		if (ret != 0)
@@ -143,9 +143,9 @@ int wmain(int argc, wchar_t* argv[])
 		ret = ovi1->ReadAudioSample(i, nullptr, 0, &ASI);
 
 		if (ret != 0) return -1;
-		fprintf(stream, "\n%d - %d", i,  ASI.SizeFrame);
+		fprintf(stream, "\n%d - %d", i,  ASI.Size);
 		//printf("\n%6d - %d", i, ASI.SizeFrame);
-		AudioAll += ASI.SizeFrame;
+		AudioAll += ASI.Size;
 	}
 
 	fprintf(stream,"\nAll = %d ", AudioAll);

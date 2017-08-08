@@ -242,17 +242,17 @@ public:
 	//------------------------
 	int Create				(const wchar_t *FileName,FileInfo *FileInfo);
 
-	int CreateEx			(const wchar_t *FileName,LPCWSTR Pass,FileInfo *FileInfo);
+	int CreateEx			(const wchar_t *FileName,uint8_t *Pass,FileInfo *FileInfo);
 
 	int	Open				(const wchar_t *FileName,FileInfo *FI);
 
-	int	OpenEx				(const wchar_t *FileName, LPCWSTR Pass,FileInfo *FI);
+	int	OpenEx				(const wchar_t *FileName, uint8_t *Pass,FileInfo *FI);
 
 	int IsOpen				();
 	
 	int GetFileInfo			(FileInfo *FileInfo);
 
-	int	SetFileInfo			(FileInfo *FileInfo);
+	int	SetFileInfo			(const FileInfo *FileInfo);
 
 	int						Close(FileInfo *FI);
 	
@@ -260,36 +260,36 @@ public:
 	//
 	int						WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void *UserData,uint32_t Size);
 
-	int						ReadVideoFrame(long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
+	int						ReadVideoFrame(const long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
 
-	int						SeekVideoFrameByTime(uint64_t Time,uint32_t *IndexFrame);
+	int						SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame);
 
-	long					SeekPreviosKeyVideoFrame(const long IndexFrame);
+	long					SeekPreviosKeyVideoFrame(long IndexFrame);
 
-	long					SeekNextKeyVideoFrame(const long IndexFrame);
+	long					SeekNextKeyVideoFrame(long IndexFrame);
 	
 	int						SetExtraData(const void *ExtraData,uint32_t BuffSize);
 
 	int						GetExtraData(unsigned char *ExtraData,uint32_t BuffSize,uint32_t *SizeExtraData);
 
-	int						GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *FI);
+	int						GetInfoVideoFrame(const uint32_t IndexFrame,VideoFrameInfo *FI);
 
 
 	// Автоматически разбивает по ...
 	//
 	int						WriteAudioSample(const void *Sample,uint32_t Size,uint64_t Time);
 	
-	int						ReadAudioSample(uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI);
+	int						ReadAudioSample(const uint32_t IndexSample,const void *Sample,uint32_t Size,AudioSampleInfo *ASI);
 
-	long					SeekAudioSampleByTime(uint64_t Time,uint32_t *InxedSample);
+	long					SeekAudioSampleByTime(const uint64_t Time,uint32_t *InxedSample);
 
 	//
 	//
-	int						Refresh(int Count);
+	int						Refresh(const int Count);
 	
 	int						Flush();
 	
-	int						Recovery(LPCWSTR FileName);
+	int						Recovery(const wchar_t *FileName);
 
 	char *					Errors(int Cod);
 
@@ -301,10 +301,9 @@ public:
 
 	int						CheckFile();
 
-
 	void					Debug(void);
 
-	int						GetLastError();
+	int						GetLastError();  // Пока ошибки I/O
 
 
 private: 

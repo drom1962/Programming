@@ -228,7 +228,7 @@ int MTD::Open(LPCWSTR FileName, MetaDataFileInfo *FI)
 
 	if (FI != nullptr)
 		{
-		FI->CountMetadataFrame = m_H_MTD.CountMataDataFrame;
+		FI->CountMetaDataFrame = m_H_MTD.CountMataDataFrame;
 		}
 
 	// Есть индекс - почитаем
@@ -333,7 +333,7 @@ int MTD::Close(MetaDataFileInfo *FI)
 
 	if (FI != nullptr)
 		{
-		FI->CountMetadataFrame = m_CountMataDataFrame;
+		FI->CountMetaDataFrame = m_CountMataDataFrame;
 		}
 
 	return S_OK;
@@ -401,13 +401,13 @@ int MTD::WriteMetaData(unsigned char  *MetaData, uint32_t Size, uint64_t Time)
 	// Перегоним в более компактную структуру для записи на диск
 	for (int i = 0; i < c; i++)
 		{
-		pToDisk->nBottom	= ((MovingTarget *)MetaData)->nBottom;
-		pToDisk->nTop		= ((MovingTarget *)MetaData)->nTop;
+		pToDisk->nBottom	= static_cast<uint16_t>(((MovingTarget *)MetaData)->nBottom);
+		pToDisk->nTop		= static_cast<uint16_t>(((MovingTarget *)MetaData)->nTop);
 
-		pToDisk->nLeft		= ((MovingTarget *)MetaData)->nLeft;
-		pToDisk->nRight		= ((MovingTarget *)MetaData)->nRight;
+		pToDisk->nLeft		= static_cast<uint16_t>(((MovingTarget *)MetaData)->nLeft);
+		pToDisk->nRight		= static_cast<uint16_t>(((MovingTarget *)MetaData)->nRight);
 
-		pToDisk->fMovAngle  = ((MovingTarget *)MetaData)->fMovAngle;
+		pToDisk->fMovAngle  = static_cast<float>(((MovingTarget *)MetaData)->fMovAngle);
 
 		if (pToDisk->fMovAngle < 0. || pToDisk->fMovAngle > 360.)
 			{
