@@ -8,6 +8,9 @@
 
 #include "..\..\Containers\ovi\metadata.h"
 
+#include "D:\GIT\MediaServer\readers\aviconteiner\avi.h"
+using namespace AVI_container;
+
 #include "kind_of_video_frames.h"
 using namespace video_frame_detection;
 
@@ -16,15 +19,16 @@ using namespace video_frame_detection;
 
 using namespace Meta_Data;
 
+typedef Archive_space::Archiv *	(CALLBACK* CreateConteiner)();
+
 int wmain(int argc, wchar_t* argv[])
 {
 
 	int ret, ret1;
 
-	MTD  *mtd1 = new MTD(1);
-	OVI2 *ovi1 = new OVI2(1);
-	//AVI  *avi  = new AVI(1);
-
+	MTD		*mtd1 = new MTD(1);
+	OVI2	*ovi1 = new OVI2(1);
+	
 	const char *ListCodecs[] = { "NONE","MJPEG","MPEG4","H.264","H.265" };
 
 	const char *AudioCodecs[]= {"MUTE","PCM","ALAW","MULAW","G726","AAC"};
@@ -43,7 +47,12 @@ int wmain(int argc, wchar_t* argv[])
 
 	ret = ovi1->Open(File, &oFI);
 	if (ret != 0) return 1;
+
 	File[wcslen(File) - 3] = 0;
+
+	unsigned char	ED[256];
+	uint32_t		sED;
+	ovi1->GetExtraData(ED, 1024, &sED);
 
 	FILE *stream;
 
@@ -117,7 +126,7 @@ int wmain(int argc, wchar_t* argv[])
 		*/
 		if (ret != 0) return -1;
 		fprintf(stream, "\n%6d - %3s  - %6d", i, Keys[VFI.Type], VFI.Size);
-		//printf("\n%6d - %3s  - %6d",i, Keys[VFI.TypeFrame], VFI.SizeFrame);
+		printf("\n%6d - %3s  - %6d",i, Keys[VFI.Type], VFI.Size);
 
 		VideoAll += VFI.Size;
 		}

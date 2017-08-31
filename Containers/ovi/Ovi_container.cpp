@@ -12,8 +12,27 @@
 
 #include "..\ovi\Ovi_container.h"
 
-
 using namespace Archive_space;
+
+
+//---------------------------------------------------------------------------
+//  Проверим расширение
+//---------------------------------------------------------------------------
+Archiv * CALLBACK CreateConteiner()
+	{
+	return new OVI2(1);
+	}
+
+//---------------------------------------------------------------------------
+//  Проверим расширение
+//---------------------------------------------------------------------------
+void CALLBACK DeleteConteiner(Archiv *Con)
+	{
+	delete Con;
+	}
+
+
+
 
 //===================================================================================================================================================
 V_e_r OviVer2={4,0,0,0};
@@ -30,29 +49,31 @@ OVI2::OVI2(int Ver_OVMSML)
 		// Заполним переменные обьекты
 		m_hFile=nullptr;
 
-		m_Flush					= 0;
-		c_Flush					= 0;
+		m_Flush						= 0;
+		c_Flush						= 0;
 
-		m_VideoBufferSize		= VIDEOMAXSIZEBLOCK;
-		m_MaxVideoIndex			=30*60*60;
-		m_VideoIndexs			=nullptr;
-		m_VideoFramesIntoBuffers=nullptr;
-		m_LocalFrame			=nullptr;
-		m_SizeLocalFrame		=FRAMEBUFFERSIZE;
+		m_VideoBuff					= nullptr;
+		m_VideoBufferSize			= VIDEOMAXSIZEBLOCK;
+		m_MaxVideoIndex				= 0;
+		m_VideoIndexs				= nullptr;
+		m_VideoFramesIntoBuffers	= nullptr;
+		m_LocalFrame				= nullptr;
+		m_SizeLocalFrame			= FRAMEBUFFERSIZE;
 		
-		m_AudioIndexs			=nullptr;
-		m_MaxAudioIndex			=30*60*60;
-		m_AudioSamplesIntoBuffers=nullptr;
-		m_AudioBufferSize		=AUDIOMAXSIZEBLOCK;
+		m_AudioIndexs				= nullptr;
+		m_MaxAudioIndex				= 0;
+		m_AudioSamplesIntoBuffers	= nullptr;
+		m_AudioBuff					= nullptr;
+		m_AudioBufferSize			= AUDIOMAXSIZEBLOCK;
 
-		m_LocalSample			=nullptr;
-		m_SizeLocalSample		=AUDIOBUFFERSIZE;
+		m_LocalSample				= nullptr;
+		m_SizeLocalSample			= AUDIOBUFFERSIZE;
 
-		m_VerOVMSML				=Ver_OVMSML;
+		m_VerOVMSML					= Ver_OVMSML;
 
-        m_average_frame_time	=1000000;
+        m_average_frame_time		= 1000000;
 
-		AES_HEADER				= new AES(256);
+		AES_HEADER					= new AES(256);
 
 		char ss[] = "ab32f8c395d0b07c7b612dcb56375e0383f85b05052b894c2f083f146c46f491";
 		for (int i = 0; i < 8; i++)
@@ -106,15 +127,6 @@ bool OVI2::CheckExtension(wchar_t * Ext)
 	}
 
 //---------------------------------------------------------------------------
-//  Проверим расширение
-//---------------------------------------------------------------------------
-Archiv * OVI2::CreateConteiner()
-	{	
-	return new OVI2(1);
-	}
-
-
-//---------------------------------------------------------------------------
 //  Создадим файл
 //---------------------------------------------------------------------------
 int OVI2::Create(const wchar_t *FileName,FileInfo *FI)
@@ -136,7 +148,8 @@ int OVI2::Create(const wchar_t *FileName,FileInfo *FI)
 		// Проверим результат
 		if(m_hFile==INVALID_HANDLE_VALUE) 
 			{
-			return GetLastError();
+			m_Error=GetLastError();
+			return OVI_NotCreate;
 			}
 
 		// Очистим заголовок
@@ -166,24 +179,30 @@ int OVI2::Create(const wchar_t *FileName,FileInfo *FI)
 		memset((void *)&m_VC,0,sizeof(VideoChank));
 		
 		// Буфер под кадры
-		m_VideoIndexs			=nullptr;
 		m_VideoFramesIntoBuffers=nullptr;
 
 		// Выделим буфера под видео
-		if(CreateBuff(&m_VideoBuff,1,0,m_VideoBufferSize))							return OVI_NotAlloc;
+		if(m_VideoBuff==nullptr && CreateBuff(&m_VideoBuff,1,0,m_VideoBufferSize))							return OVI_NotAlloc;
 		
-		if(CreateBuff(&m_VideoIndexs,sizeof(ElementVideoIndex),0,m_MaxVideoIndex))	return OVI_NotAlloc;
+		if (m_VideoIndexs == nullptr)
+			{	
+			m_MaxVideoIndex = 5 * 60 * 60;
+			if(CreateBuff(&m_VideoIndexs, sizeof(ElementVideoIndex), 0, m_MaxVideoIndex))	return OVI_NotAlloc;
+			}
 		
 		// Буфер под звук
-		m_AudioIndexs			=nullptr;
 		m_AudioSamplesIntoBuffers=nullptr;
 		
 		if(FI->AudioCodec>0) 
 			{
 			// Выделим буфера под аудио
-			if(CreateBuff(&m_AudioBuff,1,0,m_AudioBufferSize))							return OVI_NotAlloc;
+			if(m_AudioBuff==nullptr &&  CreateBuff(&m_AudioBuff,1,0,m_AudioBufferSize))							return OVI_NotAlloc;
 
-			if(CreateBuff(&m_AudioIndexs,sizeof(ElementAudioIndex),0,m_MaxAudioIndex))	return OVI_NotAlloc;
+			if (m_AudioIndexs == nullptr)
+				{	
+				m_MaxAudioIndex = 5 * 60 * 60;
+				if (CreateBuff(&m_AudioIndexs, sizeof(ElementAudioIndex), 0, m_MaxAudioIndex))	return OVI_NotAlloc;
+				}
 
 			m_AudioSamplesIntoBuffers=m_AudioBuff;
 			}
@@ -218,7 +237,7 @@ int OVI2::Create(const wchar_t *FileName,FileInfo *FI)
 //---------------------------------------------------------------------------
 //  Создадим файл
 //---------------------------------------------------------------------------
-int OVI2::CreateEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)
+int OVI2::CreateEx(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FI)
 	{
 	return OVI_NotSupport;
 	}
@@ -243,6 +262,7 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 		if(m_hFile==INVALID_HANDLE_VALUE) 
 			{
 			m_hFile=nullptr;
+			m_Error=GetLastError();
 			return OVI_NotOpen;
 			}
 
@@ -275,12 +295,12 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 		if(FI!=nullptr) GetFileInfo(FI);
 
 		// Создадим буфера
-		if(CreateBuff(&m_VideoBuff,1,0,m_VideoBufferSize)) return OVI_NotAlloc;  // Для группового чтения
+		if(m_VideoBuff==nullptr && CreateBuff(&m_VideoBuff,1,0,m_VideoBufferSize)) return OVI_NotAlloc;  // Для группового чтения
 
-		if(CreateBuff(&m_LocalFrame,1,0,m_SizeLocalFrame)) return OVI_NotAlloc;  // Для чтения кадра во внутренний буфер
+		if(m_LocalFrame==nullptr && CreateBuff(&m_LocalFrame,1,0,m_SizeLocalFrame)) return OVI_NotAlloc;  // Для чтения кадра во внутренний буфер
 
-		if(m_H_OVI.CountVideoFrame>0) m_MaxVideoIndex=m_H_OVI.CountVideoFrame;
-		if(CreateBuff((unsigned char **)&m_VideoIndexs,sizeof(ElementVideoIndex),0,m_MaxVideoIndex)) return OVI_NotAlloc;
+		if(CreateBuff((unsigned char **)&m_VideoIndexs,sizeof(ElementVideoIndex),m_MaxVideoIndex, m_H_OVI.CountVideoFrame)) return OVI_NotAlloc;
+		m_MaxVideoIndex = m_H_OVI.CountVideoFrame;
 
 		m_LastVideoRefresh=m_H_OVI.FirstVideoFrame;
 		m_LastAudioRefresh=m_H_OVI.FirstAudioSample;
@@ -352,6 +372,15 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 		m_CurrentVideoFrame	=m_H_OVI.CountVideoFrame;
 		m_CurrentAudioSample=m_H_OVI.CountAudioSample;
 
+
+		// Временно пересчитаем временные метки
+		/*
+		DWORD ss=static_cast<DWORD>((m_H_OVI.Duration/m_H_OVI.CountVideoFrame)*base_time);
+		for(int i=0;i<m_H_OVI.CountVideoFrame;i++)
+			{
+			((ElementVideoIndex*)m_VideoIndexs)[i].Time=static_cast<uint64_t>(ss*i);
+			}
+		*/
 		// Есть индекс - почитаем
 		if(ff>0) return OVI_NotClose;
 				
@@ -362,7 +391,7 @@ int OVI2::Open(const wchar_t *FileName,FileInfo *FI)
 //---------------------------------------------------------------------------
 //  Откроем на чтение наш контейнер
 //---------------------------------------------------------------------------
-int OVI2::OpenEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)
+int OVI2::OpenEx(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FI)
 	{
 	return OVI_NotSupport;
 	}
@@ -417,11 +446,12 @@ int OVI2::Close(FileInfo *FI)
 				}
 			}
 
-		m_H_OVI.MainVideoIndex=Pos;
-		m_H_OVI.CountVideoFrame=m_CurrentVideoFrame;
+		m_H_OVI.MainVideoIndex		=Pos;
+		m_H_OVI.CountVideoFrame		=m_CurrentVideoFrame;
 		
-		m_H_OVI.Duration =static_cast<UINT>(((ElementVideoIndex *)m_VideoIndexs)[m_CurrentVideoFrame-1].Time/m_average_frame_time);
-		
+		m_H_OVI.Duration	=static_cast<double>(((ElementVideoIndex *)m_VideoIndexs)[m_CurrentVideoFrame-1].Time/static_cast<double>(base_time));
+		m_H_OVI.FPS			=static_cast<double>(m_CurrentVideoFrame/m_H_OVI.Duration);
+
 		// Вычислим GOP
 		m_H_OVI.GOP = 1;
 		for (; m_H_OVI.GOP < m_H_OVI.CountVideoFrame; m_H_OVI.GOP++)
@@ -488,13 +518,12 @@ int OVI2::SetExtraData(const void *ExtraData,uint32_t Size)
 		// А надо это делвать ?
 		if(Size<=m_H_OVI.SizeExtraData)			return OVI_InvalidBuffer;  // Если она вмещается в старую
 
-		if(m_H_OVI.SizeExtraData>0)				return OVI_ReadOnly;  // Уже  ее записали
-		if(m_H_OVI.FirstVideoFrame>0)			return OVI_ReadOnly;  // Уже  ее записали
-		if(m_H_OVI.FirstAudioSample>0)			return OVI_ReadOnly;  // Уже  ее записали
+		if(m_H_OVI.SizeExtraData>0 || m_H_OVI.FirstVideoFrame>0 || m_H_OVI.FirstAudioSample>0)		
+												return OVI_ReadOnly;  // Уже  ее записали
 		
 		m_H_OVI.ExtraData=SetFilePointer(m_hFile,0L,nullptr,FILE_CURRENT);  // Зафиксируем начало ExtraData
 
-		if(MyWrite(ExtraData,Size,0))			return 999;
+		if(MyWrite(ExtraData,Size,0))			return OVI_NotWrite;
 
 		m_H_OVI.SizeExtraData=Size;
 				
@@ -630,7 +659,7 @@ int OVI2::WriteVideoFrame(const void *Frame,uint32_t SizeFrame,int KeyFlag,uint6
 //
 //	P.S.	Если Buff задать нулевым, то кадр запишется в локальный буфер и в VFI будет он передан
 //          если размер буфера меньше размера кадра, то в струтуре будет возвращен его размер кадра
-int OVI2::ReadVideoFrame(const long IndexFrame,void *Buff,uint32_t Size,VideoFrameInfo *VFI)  
+int OVI2::ReadVideoFrame(const long IndexFrame,const void *Buff,uint32_t Size,VideoFrameInfo *VFI)  
 		{
 		if(m_hFile==nullptr)			return OVI_NotOpen;
 
@@ -673,7 +702,7 @@ int OVI2::ReadVideoFrame(const long IndexFrame,void *Buff,uint32_t Size,VideoFra
 			if(TotalSizeFrame<Size)
 				{
 				// Возьмем  кадр из буфера кадров	
-				memcpy(Buff,m_VideoBuff+Pos,TotalSizeFrame);
+				memcpy((void *)Buff,m_VideoBuff+Pos,TotalSizeFrame);
 				if (m_Crypto && EVI2->Type)
 						Decrypt((unsigned char*)Buff, EVI2->Size);
 				}
@@ -790,6 +819,9 @@ int OVI2::SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame)
 			return S_OK;
 			}
 		}
+
+	// Время за пределами
+	*IndexFrame = m_CurrentVideoFrame;
 
 	return OVI_FrameNone;
 	}
@@ -1050,6 +1082,8 @@ long OVI2::SeekAudioSampleByTime(const uint64_t Time,uint32_t *IndexSample)
 			return S_OK;
 			}
 		}
+	// Время за пределами
+	*IndexSample = m_CurrentAudioSample;
 
 	return OVI_FrameNone;
 	}
@@ -1140,8 +1174,6 @@ int OVI2::Flush()
 		if(m_hFile==nullptr)	return OVI_NotOpen;
 
 		if(!m_Mod)				return S_OK;
-
-		m_H_OVI.CountVideoFrame=m_CurrentVideoFrame;
 
 		c_Flush++;
 
@@ -1594,7 +1626,11 @@ int OVI2::WriteHeader(bool Flag)
 
 		// Перейдем в начало файла
 		Size=SetFilePointer(m_hFile,0L,nullptr,FILE_BEGIN);
-		if(Size!=0) return GetLastError();
+		if(Size!=0) 
+			{
+			m_Error=GetLastError();
+			return  OVI_NotWrite;
+			}
 
 		// Создадим контрольную сумму заголовка
 		m_H_OVI.CrcHeader=Crc8((unsigned char *)&m_H_OVI,sizeof(Header_OVI)-1,0x25);
@@ -1604,6 +1640,10 @@ int OVI2::WriteHeader(bool Flag)
 		Header_OVI ss;
 		memcpy(&ss, &m_H_OVI, sizeof(Header_OVI));
 
+		// Запишем из локальных в заголовок
+		m_H_OVI.CountVideoFrame=m_CurrentVideoFrame;
+		m_H_OVI.CountAudioSample=m_CurrentAudioSample;
+		
 		AES_HEADER->Crypt((unsigned long *)&ss, sizeof(m_H_OVI));
 
 		if(MyWrite((void *)&ss,sizeof(Header_OVI),0))
@@ -1629,11 +1669,13 @@ int  OVI2::ReadHeader(Header_OVI *HD)
 
 		if(HD==nullptr)				return OVI_InvalidParam;
 
-		AES_HEADER->Debug();
-
 		// Перейдем в начало файла
 		Size=SetFilePointer(m_hFile,0L,nullptr,FILE_BEGIN);
-		if(Size!=0) return GetLastError();
+		if(Size!=0) 			
+			{
+			m_Error=GetLastError();
+			return  OVI_NotRead;
+			}
 
 		// Прочитаем Версию контейнера
 		if(!ReadFile(m_hFile,&HD->Ver,sizeof(HD->Ver),&Size,nullptr))
@@ -1645,7 +1687,8 @@ int  OVI2::ReadHeader(Header_OVI *HD)
 		// Прочтем заголовок
 		if(!ReadFile(m_hFile,(Header_OVI *)&HD->VerOVSML,sizeof(Header_OVI)-sizeof(HD->Ver),&Size,nullptr))
 			{
-			return GetLastError();
+			m_Error=GetLastError();
+			return  OVI_NotRead;
 			}
 
 		if(Size!=sizeof(m_H_OVI)-sizeof(HD->Ver)) return OVI_E_FAIL;
@@ -1819,13 +1862,6 @@ int OVI2::Decrypt(unsigned char *Buff,DWORD Size)
 
 	return 0;
 	}
-
-//
-//  Расшифруем
-//
-void OVI2::Debug(void)
-{
-}
 
 
 //---------------------------------------------------------------------------

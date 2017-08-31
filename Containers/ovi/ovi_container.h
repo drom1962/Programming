@@ -234,19 +234,17 @@ public:
 
 	bool		            CheckExtension(wchar_t *);
 
-	Archiv *	            CreateConteiner();
-
 	void 					Version(V_e_r*);
 
 	//
 	//------------------------
 	int Create				(const wchar_t *FileName,FileInfo *FileInfo);
 
-	int CreateEx			(const wchar_t *FileName,uint8_t *Pass,FileInfo *FileInfo);
+	int CreateEx			(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FileInfo);
 
 	int	Open				(const wchar_t *FileName,FileInfo *FI);
 
-	int	OpenEx				(const wchar_t *FileName, uint8_t *Pass,FileInfo *FI);
+	int	OpenEx				(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FI);
 
 	int IsOpen				();
 	
@@ -260,13 +258,13 @@ public:
 	//
 	int						WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void *UserData,uint32_t Size);
 
-	int						ReadVideoFrame(const long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
+	int						ReadVideoFrame(const long IndexFrame,const void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *FI);
 
 	int						SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame);
 
-	long					SeekPreviosKeyVideoFrame(long IndexFrame);
+	long					SeekPreviosKeyVideoFrame(const long IndexFrame);
 
-	long					SeekNextKeyVideoFrame(long IndexFrame);
+	long					SeekNextKeyVideoFrame(const long IndexFrame);
 	
 	int						SetExtraData(const void *ExtraData,uint32_t BuffSize);
 

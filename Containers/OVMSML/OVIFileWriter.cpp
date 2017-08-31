@@ -104,28 +104,28 @@ HRESULT OviFileWriter::WriteVideoFrame( const char *buffer, unsigned int size, u
 		{
 		return E_INVALIDARG;
 		}
-
-	int res = m_Container	->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time,nullptr, 0);
+	// Время переводим из 10 000 000 в 1 000 000
+	int res = m_Container	->WriteVideoFrame((unsigned char *)buffer,size,keyFlag,time/10,nullptr, 0);
 	// Можно получить ошибку детально типа GetLastError
 	
-	return 0==res ? S_OK : STG_E_WRITEFAULT;
+	return 0==res ? S_OK : HRESULT_FROM_WIN32(m_Container->GetLastError());
 	}
 
 //
 //		Запишем звук
 //
-HRESULT OviFileWriter::WriteAudioFrame( const char *buffer, unsigned int size, uint64_t time )
+HRESULT OviFileWriter::WriteAudioFrame( const char *buffer, unsigned int size, uint64_t time)
 	{
 	wchar_t Buff[128];
 	swprintf_s(Buff,L"\nSize = %d\n",size);
 	
 	OutputDebugString(Buff);
 
+	// Время переводим из 10 000 000 в 1 000 000
+	int ret=m_Container->WriteAudioSample((unsigned char *)buffer,size,time/10);
 
-	int ret=m_Container->WriteAudioSample((unsigned char *)buffer,size,time);
 
-
-	return S_OK;
+	return 0==ret ? S_OK : HRESULT_FROM_WIN32(m_Container->GetLastError());
 	}
 
 //
@@ -154,7 +154,8 @@ HRESULT OviFileWriter::WriteMetaData(const char *buffer, unsigned int size, uint
 		}
 
 	// Запишем
-	m_MetaData->WriteMetaData((unsigned char *)buffer,size,time);
+	// Время переводим из 10 000 000 в 1 000 000
+	int res=m_MetaData->WriteMetaData((unsigned char *)buffer,size,time/10);
 
-	return S_OK;
+	return 0==res ? S_OK : HRESULT_FROM_WIN32(m_Container->GetLastError());
 	}

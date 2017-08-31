@@ -7,32 +7,33 @@
 enum
 {
     OVI_S_OK = 0x00,
-    OVI_File = 0x01,
-    OVI_NotOpen = 0x02,
-    OVI_NotReadHeder = 0x22,
-    OVI_NotClose = 0x03,
-    OVI_ReadOnly = 0x04,
-    OVI_CreateIndex = 0x05,
-    OVI_ReadFrame = 0x06,
-    OVI_ExtraNone = 0x07,
-    OVI_FrameNone = 0x08,
-    OVI_NotAlloc = 0x09,
-    OVI_NotWrite = 0x0A,
-    OVI_NotRead = 0x7A,
-    OVI_NextRefresh = 0x0B,
-    OVI_InvalidIndex = 0x0C,
-    OVI_InvalidBuffer = 0x0D,
-    OVI_InvalidParam = 0x0E,
-    OVI_E_FAIL = 0x0F,
-    OVI_CrcFile_FAIL = 0x10,
-    OVI_CrcHeader_FAIL = 0x11,
-	OVI_SmallBuff=0x12,
-    OVI_Max = 0x13,
-    OVI_Err1 = 0x20,
-    OVI_Err2 = 0x21,
-    OVI_Err3 = 0x22,
-    OVI_Err4 = 0x23,
-	OVI_NotSupport = 0xfe
+    OVI_File,
+	OVI_NotCreate,
+    OVI_NotOpen,
+    OVI_NotReadHeder,
+    OVI_NotClose,
+    OVI_ReadOnly,
+    OVI_CreateIndex,
+    OVI_ReadFrame,
+    OVI_ExtraNone,
+    OVI_FrameNone,
+    OVI_NotAlloc,
+    OVI_NotWrite,
+    OVI_NotRead,
+    OVI_NextRefresh,
+    OVI_InvalidIndex,
+    OVI_InvalidBuffer,
+    OVI_InvalidParam,
+    OVI_E_FAIL,
+    OVI_CrcFile_FAIL,
+    OVI_CrcHeader_FAIL,
+	OVI_SmallBuff,
+    OVI_Max,
+    OVI_Err1,
+    OVI_Err2,
+    OVI_Err3,
+    OVI_Err4,
+	OVI_NotSupport
 
 };
 
@@ -156,7 +157,7 @@ struct MetaDataInfo
 namespace Archive_space
 {
 
-const int base_time = 1000000;
+const int base_time = 1*1000*1000;  // Временная метка в микросекундах
 
 class  Archiv
 	{
@@ -167,19 +168,17 @@ class  Archiv
 
 		virtual bool		CheckExtension(wchar_t *)=0;
 
-		virtual Archiv		*CreateConteiner()=0;
-
         virtual void		Version(V_e_r*)=0;
 
 
 		// 
 		virtual int			Create(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			CreateEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)=0;
+		virtual int			CreateEx(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FI)=0;
 
 		virtual int			Open(const wchar_t *FileName,FileInfo *FI)=0;
 
-		virtual int			OpenEx(const wchar_t *FileName,uint8_t *Pass,FileInfo *FI)=0;
+		virtual int			OpenEx(const wchar_t *FileName,const uint8_t *Pass,FileInfo *FI)=0;
 		
 		virtual	int			IsOpen()=0;
 
@@ -193,19 +192,19 @@ class  Archiv
 		// Видео часть
 		virtual int			WriteVideoFrame(const void *VideoFrame,uint32_t SizeFrame,int KeyFlag,uint64_t Time,const void  *UserData,uint32_t Size)=0;
 
-		virtual int			ReadVideoFrame(const long IndexFrame,void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
+		virtual int			ReadVideoFrame(const long IndexFrame,const void *BuffFrame,uint32_t BuffSize,VideoFrameInfo *VFI)=0;
 
 		virtual int			SeekVideoFrameByTime(const uint64_t Time,uint32_t *IndexFrame)=0;
 
-		virtual long		SeekPreviosKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekPreviosKeyVideoFrame(const long IndexFrame)=0;
 
-		virtual long		SeekNextKeyVideoFrame(long IndexFrame)=0;
+		virtual long		SeekNextKeyVideoFrame(const long IndexFrame)=0;
 
 		virtual int			SetExtraData(const void *ExtraData,uint32_t BuffSize)=0;
 
 		virtual int			GetExtraData(unsigned char *ExtraData,uint32_t BuffSize,uint32_t *SizeExtraData)=0;
 
-		virtual int			GetInfoVideoFrame(uint32_t IndexFrame,VideoFrameInfo *VFI)=0;
+		virtual int			GetInfoVideoFrame(const uint32_t IndexFrame,VideoFrameInfo *VFI)=0;
 
 
 		// Звуковая часть
@@ -226,7 +225,7 @@ class  Archiv
 		//
 		virtual int			GetLastError()=0;
 	};
- 
+
 } 
 
 

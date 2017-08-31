@@ -11,11 +11,10 @@
 #include <stdio.h>
 
 
-using namespace Meta_Data;
+//using namespace Meta_Data;
 
 int wmain(int argc, wchar_t* argv[])
 	{
-
 	int ret;
 
 	MTD  *mtd1 =new MTD(1);
